@@ -18,8 +18,8 @@ preguntas <- html_nodes(preguntas, "table") %>%
    html_table(b, fill = TRUE) %>% 
    .[[1]] %>% 
    as_tibble() %>% 
-   filter(str_detect(string = X2, pattern = "[[:punct:]][A-z]")) %>% 
-   filter(!str_detect(string = X2, pattern = "questions")) %>% 
+   filter(str_detect(string = X2, pattern = "[[:punct:]][A-z]"),
+          !str_detect(string = X2, pattern = "questions")) %>% 
    mutate(X1 = if_else(str_detect(string = X2, pattern = "subject"), X2, NA_character_)) %>% 
    tidyr::fill(X1, .direction = "down" ) %>% 
    filter(X1 != X2) %>% 
