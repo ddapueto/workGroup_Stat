@@ -15,7 +15,7 @@ datos <- left_join(datos, candidatos, by = c("candidatoId" = "id")) %>% select(i
 url_preguntas <- "https://github.com/johnblanco/predictor_electoral/blob/master/predictor_pol/preguntas.json"
 preguntas <- xml2::read_html(url_preguntas, encoding = "UTF-8")
 preguntas <- html_nodes(preguntas, "table") %>% 
-   html_table(b, fill = TRUE) %>% 
+   html_table(fill = TRUE) %>% 
    .[[1]] %>% 
    as_tibble() %>% 
    filter(str_detect(string = X2, pattern = "[[:punct:]][A-z]"),
