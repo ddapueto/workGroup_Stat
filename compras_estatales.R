@@ -8,19 +8,13 @@ compras <- readr::read_csv("Csv/comprasEstatales.csv")
 # all.equal(compras$X1, seq(0, dim(compras)[1]-1, 1))
 # comentario: revisar parseo....hay cosas raras (por ejemplo `@id_compra` es character)
 
+compras <- compras %>% 
+   mutate(`@fecha_compra` = lubridate::dmy(`@fecha_compra`))
+
 # Variable classes
-tibble(
-   variables = names(sapply(compras, class)),
-   classes = sapply(compras, class)) %>% 
-   ggplot() +
-   geom_bar(aes(fct_infreq(classes)))
-
-
-compras %>% 
-   mutate(`@fecha_compra` = lubridate::dmy(`@fecha_compra`),
-          `@id_compra` = as.numeric(`@id_compra`)) %>% 
-   select(`@id_compra`, everything()) %>% 
-   filter(is.na(`@id_compra`))
+tibble(variables = names(sapply(compras, class)),
+       classes = sapply(compras, class)) %>%
+   count(classes)
 
 id_compra <- as.numeric(compras$`@id_compra`)
 pudo_parsear <- NULL
