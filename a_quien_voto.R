@@ -28,9 +28,6 @@ preguntas <- html_nodes(preguntas, "table") %>%
           X1 = str_to_title(X1),
           X2 = str_replace_all(string = X2, pattern = "[[:punct:]]", replacement = "")) %>% 
    rename(Subject = X1, Question = X2)
-clave <- c("")
-
-
 
 #####################
 #### END OF CODE ####
