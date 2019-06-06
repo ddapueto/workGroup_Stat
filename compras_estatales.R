@@ -7,7 +7,7 @@ library(lubridate)
 library(stringr)
 library(rvest)
 
-#### Descarga y le la base de monedas ####
+## datos de monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
 monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<monedas>)", replacement = "") %>% 
@@ -26,13 +26,31 @@ monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>%
           id_moneda_arbitraje = as.numeric(str_replace_all(string = id_moneda_arbitraje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_moneda))
 
+## Estados de compras ##
+url_estados_compras <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteEstadosCompra.do"
+estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<estados-compra>)", replacement = "") %>% 
+   str_replace(pattern = "(</estados-compra>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<estado-compra ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_estado_compra", "descripcion")) %>% 
+   mutate(id_estado_compra = as.numeric(str_replace_all(string = id_estado_compra, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "(^descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
+   filter(!is.na(id_estado_compra))
+
+
 
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
 compras <- compras %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
           es_reiteracion = fct_recode(es_reiteracion, "No" = "N", "Yes" = "S"),
           estado_compra = as.factor(estado_compra),
-          fecha_compra = lubridate::dmy(fecha_compra),
+          fecha_compra = lubridate::dmy(fecha_compra), # comienzo licitación
           fecha_pub_adj = lubridate::dmy_hm(fecha_pub_adj),
           fondos_rotatorios = fct_recode(fondos_rotatorios, "No" = "N", "Yes" = "S"),
           id_inciso = as.factor(id_inciso),
@@ -47,6 +65,7 @@ compras <- compras %>%
 tibble(variables = names(sapply(compras, class)),
        classes = sapply(compras, class)) %>%
    unnest() %>% 
+   mutate(classes = if_else(classes == "POSIXct" | classes == "POSIXt", "Datetime", classes)) %>%
    count(classes)
 
 # adjudicaciones -> detalle de la compra (de la factura)
