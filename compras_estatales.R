@@ -7,6 +7,8 @@ library(lubridate)
 library(stringr)
 library(rvest)
 
+#### PARSERS METADATA ####
+
 ## Estados de compras ##
 url_estados_compras <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteEstadosCompra.do"
 estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "Latin1"))[3] %>% 
@@ -60,9 +62,6 @@ incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>%
           nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(inciso))
 
-
-
-
 ## Monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
 monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>% 
@@ -82,7 +81,22 @@ monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>%
           id_moneda_arbitraje = as.numeric(str_replace_all(string = id_moneda_arbitraje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_moneda))
 
-
+## Objetos gasto ##
+url_objetos_gasto <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteObjetosGasto.do"
+objetos_gastos <- read_lines(url_objetos_gasto, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<objetos-gastos>)", replacement = "") %>% 
+   str_replace(pattern = "(</objetos-gastos>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<objeto-gasto ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("odg", "descripcion")) %>% 
+   mutate(odg = as.numeric(str_replace_all(string = odg, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
+   filter(!is.na(odg))
 
 
 
