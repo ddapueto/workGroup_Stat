@@ -168,7 +168,7 @@ subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "
    filter(!is.na(id_tipocompra))
 
 
-
+## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
 compras <- compras %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
