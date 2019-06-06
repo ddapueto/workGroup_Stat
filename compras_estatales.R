@@ -43,6 +43,26 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
    filter(!is.na(desc_estado))
 
+## Incisos ##
+url_incisos <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteIncisos.do"
+incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<incisos>)", replacement = "") %>% 
+   str_replace(pattern = "(</incisos>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<inciso ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("inciso", "nom_inciso")) %>% 
+   mutate(inciso = as.numeric(str_replace_all(string = inciso, pattern = "[^0-9]", replacement = "")),
+          nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
+   filter(!is.na(inciso))
+
+
+
+
 ## Monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
 monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>% 
@@ -61,6 +81,7 @@ monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>%
           sigla_moneda = str_replace_all(string = sigla_moneda, pattern = "(^sigla-moneda=\")|(\")", replacement = ""),
           id_moneda_arbitraje = as.numeric(str_replace_all(string = id_moneda_arbitraje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_moneda))
+
 
 
 
