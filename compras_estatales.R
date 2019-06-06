@@ -135,6 +135,38 @@ subprogramas_pcpd <- read_lines(url_subprogramas_pcpd, locale = locale(encoding 
           fecha_hasta = str_replace_all(string = fecha_hasta, pattern = "^(fecha-hasta=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(codigo))
 
+## Subtipos compra ##
+url_subtipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubTiposCompra.do"
+subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<subtipos-compra>)", replacement = "") %>% 
+   str_replace(pattern = "(</subtipos-compra>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<subtipo-compra ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3"),
+          x = if_else(str_detect(string = x, pattern = "pub-llamado") == FALSE,
+                      str_replace(string = x, pattern = "@cond", replacement = "@@cond"), x),
+          x = if_else(str_detect(string = x, pattern = "pub-adj") == FALSE,
+                      str_replace(string = x, pattern = "@cant-adj", replacement = "@@cant-adj"), x),
+          x = if_else(str_detect(string = x, pattern = "prov-rupe") == FALSE,
+                      str_replace(string = x, pattern = "@pub-adj", replacement = "@@pub-adj"), x)) %>% 
+   separate(x, sep = "@",
+            into = c("id", "id_tipocompra", "resumen", "pub_llamado", "cond_precios_ofertas", "fecha_baja", "prov_rupe", 
+                     "pub_adj", "cant_adj")) %>% 
+   mutate(id = str_replace_all(string = id, pattern = "^(id=\")|(\")$", replacement = ""),
+          id_tipocompra = str_replace_all(string = id_tipocompra, pattern = "^(id-tipocompra=\")|(\")", replacement = ""),
+          resumen = str_replace_all(string = resumen, pattern = "^(resumen=\")|(\")", replacement = ""),
+          pub_llamado = str_replace_all(string = pub_llamado, pattern = "^(pub-llamado=\")|(\")$", replacement = ""),
+          cond_precios_ofertas = str_replace_all(string = cond_precios_ofertas, pattern = "^(cond-precios-ofertas=\")|(\")$", replacement = ""),
+          cond_precios_ofertas = str_replace_all(string = cond_precios_ofertas, pattern = "\\&gt;", replacement = ">"),
+          fecha_baja = lubridate::dmy(str_replace_all(string = fecha_baja, pattern = "^(fecha-baja=\")|(\")", replacement = "")),
+          prov_rupe = str_replace_all(string = prov_rupe, pattern = "^(prov-rupe=\")|(\")$", replacement = ""),
+          pub_adj = str_replace_all(string = pub_adj, pattern = "^(pub-adj=\")|(\")$", replacement = ""),
+          cant_adj = str_replace_all(string = cant_adj, pattern = "^(cant-adj=\")|(\")$", replacement = "")) %>% 
+   filter(!is.na(id_tipocompra))
+
 
 
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
