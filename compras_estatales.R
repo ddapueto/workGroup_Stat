@@ -116,6 +116,25 @@ porcentaje_subprograma_pcpd <- read_lines(url_pcpd, locale = locale(encoding = "
           porcentaje = as.numeric(str_replace_all(string = porcentaje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(codigo_subprograma))
 
+## Suprogramas PCPD ##
+url_subprogramas_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubprogramasPCPD.do"
+subprogramas_pcpd <- read_lines(url_subprogramas_pcpd, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<subprogramas-pcpd>)", replacement = "") %>% 
+   str_replace(pattern = "(</subprogramas-pcpd>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<subprograma-pcpd ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("codigo", "descripcion", "fecha_desde", "fecha_hasta")) %>% 
+   mutate(codigo = as.numeric(str_replace_all(string = codigo, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
+          fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\")", replacement = "")),
+          fecha_hasta = str_replace_all(string = fecha_hasta, pattern = "^(fecha-hasta=\")|(\"\\s/>)", replacement = "")) %>% 
+   filter(!is.na(codigo))
+
 
 
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
