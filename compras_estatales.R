@@ -98,6 +98,24 @@ objetos_gastos <- read_lines(url_objetos_gasto, locale = locale(encoding = "Lati
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(odg))
 
+## Porcentaje suprograma PCPD ##
+url_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reportePorcentajesSubprogramasPCPD.do"
+porcentaje_subprograma_pcpd <- read_lines(url_pcpd, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<porcentajes-subprograma-pcpd>)", replacement = "") %>% 
+   str_replace(pattern = "(</porcentajes-subprograma-pcpd>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<porcentaje-subprograma-pcpd ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("codigo_subprograma", "fecha_vigencia", "porcentaje")) %>% 
+   mutate(codigo_subprograma = as.numeric(str_replace_all(string = codigo_subprograma, pattern = "[^0-9]", replacement = "")),
+          fecha_vigencia = lubridate::dmy(str_replace_all(string = fecha_vigencia, pattern = "^(fecha-vigencia=\")|(\")", replacement = "")),
+          porcentaje = as.numeric(str_replace_all(string = porcentaje, pattern = "[^0-9]", replacement = ""))) %>% 
+   filter(!is.na(codigo_subprograma))
+
 
 
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
