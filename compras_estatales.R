@@ -349,7 +349,7 @@ unidades_compra_centralizada <- read_lines(url_unidades_compra_centralizada, loc
    filter(!is.na(nom_ucc))
 write_rds(unidades_compra_centralizada, path = "Csv/meta_unidades_compra_centralizada.rds")
 
-## Unidades de compra centralizadas ##
+## Unidades ejecutoras ##
 url_unidades_ejecutoras <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUnidadesEjecutoras.do"
 unidades_ejecutoras <- read_lines(url_unidades_ejecutoras, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<unidades-ejecutoras>)", replacement = "") %>% 
@@ -368,6 +368,24 @@ unidades_ejecutoras <- read_lines(url_unidades_ejecutoras, locale = locale(encod
    filter(!is.na(id_ue))
 write_rds(unidades_ejecutoras, path = "Csv/meta_unidades_ejecutoras.rds")
 
+## Unidades ejecutoras tope ampliado ##
+url_ues_topes_ampliados <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUETopesAmpliados.do"
+ues_topes_ampliados <- read_lines(url_ues_topes_ampliados, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<ues-topes-ampliados>)", replacement = "") %>% 
+   str_replace(pattern = "(</ues-topes-ampliados>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<ue-tope-ampliado ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_inciso", "id_ue", "fecha_desde")) %>% 
+   mutate(id_inciso = as.numeric(str_replace_all(string = id_inciso, pattern = "[^0-9]", replacement = "")),
+          id_ue = as.numeric(str_replace_all(string = id_ue, pattern = "[^0-9]", replacement = "")),
+          fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\"\\s/>)", replacement = ""))) %>% 
+   filter(!is.na(id_ue))
+write_rds(ues_topes_ampliados, path = "Csv/meta_ues_topes_ampliados.rds")
 
 
 ## Base de compras ##
