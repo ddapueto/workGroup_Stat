@@ -177,10 +177,65 @@ write_rds(subtipos_compras, path = "Csv/meta_subtipos_compras.rds")
 
 ## Tipos de ajustes de adjuudiicacion ##
 url_tipos_ajustes_adj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposAjusteAdj.do"
+tipos_ajustes_adj <- read_lines(url_tipos_ajustes_adj, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-ajuste-adj>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-ajuste-adj>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-ajuste-adj ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3"),
+          x = if_else(str_detect(string = x, pattern = "nuevo-item-ofe") == FALSE,
+                      str_replace(string = x, pattern = "@modif-item-adj", replacement = "@@modif-item-adj"), x)) %>% 
+   separate(x, sep = "@",
+            into = c("id", "descripcion", "reiteracion", "resolucion", "pub_llamado", "nuevo_item_ofe", "modif_item_adj", 
+                     "nuevo_item_adj")) %>% 
+   mutate(id = as.numeric(str_replace_all(string = id, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
+          reiteracion = as.factor(str_replace_all(string = reiteracion, pattern = "^(reiteracion=\")|(\")", replacement = "")),
+          resolucion = as.factor(str_replace_all(string = resolucion, pattern = "^(resolucion=\")|(\")$", replacement = "")),
+          pub_llamado = as.factor(str_replace_all(string = pub_llamado, pattern = "^(pub-llamado=\")|(\")$", replacement = "")),
+          nuevo_item_ofe = as.factor(str_replace_all(string = nuevo_item_ofe, pattern = "^(nuevo-item-ofe=\")|(\")$", replacement = "")),
+          modif_item_adj = as.factor(str_replace_all(string = modif_item_adj, pattern = "^(modif-item-adj=\")|(\")$", replacement = "")),
+          nuevo_item_adj = as.factor(str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\")$", replacement = ""))) %>% 
+   filter(!is.na(id))
+write_rds(tipos_ajustes_adj, path = "Csv/meta_tipos_ajustes_adj.rds")
 
-
-
-
+## Tipos dee compra ##
+url_tipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposCompra.do"
+tipos_compra <- read_lines(url_tipos_compra, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-compra>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-compra>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-compra ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3"),
+          x = if_else(str_detect(string = x, pattern = "acto-apertura") == FALSE,
+                      str_replace(string = x, pattern = "@plazo-min-oferta", replacement = "@@plazo-min-oferta"), x),
+          x = if_else(str_detect(string = x, pattern = "plazo-min-oferta") == FALSE,
+                      str_replace(string = x, pattern = "@resolucion-obligatoria", replacement = "@@resolucion-obligatoria"), x),
+          x = if_else(str_detect(string = x, pattern = "solics-llamado") == FALSE,
+                      str_replace(string = x, pattern = "@ampliaciones", replacement = "@@ampliaciones"), x),
+          x = if_else(str_detect(string = x, pattern = "tope-legal") == FALSE,
+                      str_replace(string = x, pattern = "@pcpd", replacement = "@@pcpd"), x)) %>% 
+   separate(x, sep = "@",
+            into = c("id", "descripcion", "oferta_economica", "acto_apertura", "plazo_min_oferta", "resolucion_obligatoria", 
+                     "solics_llamado",  "ampliaciones", "tope_legal", "pcpd")) %>% 
+   mutate(id = str_replace_all(string = id, pattern = "^(id=\")|(\")", replacement = ""),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
+          oferta_economica = str_replace_all(string = oferta_economica, pattern = "^(oferta-economica=\")|(\")", replacement = ""),
+          acto_apertura = str_replace_all(string = acto_apertura, pattern = "^(acto-apertura=\")|(\")$", replacement = ""),
+          plazo_min_oferta = str_replace_all(string = plazo_min_oferta, pattern = "^(plazo-min-oferta=\")|(\")$", replacement = ""),
+          resolucion_obligatoria = str_replace_all(string = resolucion_obligatoria, pattern = "^(resolucion-obligatoria=\")|(\")$", replacement = ""),
+          solics_llamado = str_replace_all(string = solics_llamado, pattern = "^(solics-llamado=\")|(\")$", replacement = ""),
+          ampliaciones = str_replace_all(string = ampliaciones, pattern = "^(ampliaciones=\")|(\")$", replacement = ""),
+          tope_legal = str_replace_all(string = tope_legal, pattern = "^(tope-legal=\")|(\")$", replacement = ""),
+          pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\")$", replacement = "")) %>% 
+   filter(!is.na(descripcion))
+write_rds(tipos_compra, path = "Csv/meta_tipos_compra.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
