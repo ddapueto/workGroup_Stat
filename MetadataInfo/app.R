@@ -24,7 +24,22 @@ ui <- tagList(
                             c("Compras Estatales" = "compras" ,
                               "Adjudicaciones" = "adjudicaciones",
                               "Oferentes" = "oferantes"), 
-                            selected = 'compras')
+                            selected = 'compras'),
+               conditionalPanel(
+                 condition = "input.metadata == 'compras'",
+                 selectInput("codCompras" , "Codigos de Atributos en Compras",
+                             unique(unlist(compras[c("Atributo")])))
+               ),
+               conditionalPanel(
+                 condition = "input.metadata == 'adj'",
+                 selectInput("codAdj" , "Codigos de Atributos en Adjudicaciones",
+                             unique(unlist(adjudicaciones[c("Atributo")])))
+               ),
+               conditionalPanel(
+                 condition = "input.metadata == 'ofe'",
+                 selectInput("codOfe" , "Codigos de Atributos en Oferentes",
+                             unique(unlist(oferantes[c("Atributo")])))
+               )
              ),
              mainPanel(
                tabsetPanel(
