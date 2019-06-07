@@ -171,7 +171,7 @@ subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "
           fecha_baja = lubridate::dmy(str_replace_all(string = fecha_baja, pattern = "^(fecha-baja=\")|(\")", replacement = "")),
           prov_rupe = str_replace_all(string = prov_rupe, pattern = "^(prov-rupe=\")|(\")$", replacement = ""),
           pub_adj = str_replace_all(string = pub_adj, pattern = "^(pub-adj=\")|(\")$", replacement = ""),
-          cant_adj = str_replace_all(string = cant_adj, pattern = "^(cant-adj=\")|(\")$", replacement = "")) %>% 
+          cant_adj = str_replace_all(string = cant_adj, pattern = "^(cant-adj=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(id_tipocompra))
 write_rds(subtipos_compras, path = "Csv/meta_subtipos_compras.rds")
 
@@ -198,7 +198,7 @@ tipos_ajustes_adj <- read_lines(url_tipos_ajustes_adj, locale = locale(encoding 
           pub_llamado = as.factor(str_replace_all(string = pub_llamado, pattern = "^(pub-llamado=\")|(\")$", replacement = "")),
           nuevo_item_ofe = as.factor(str_replace_all(string = nuevo_item_ofe, pattern = "^(nuevo-item-ofe=\")|(\")$", replacement = "")),
           modif_item_adj = as.factor(str_replace_all(string = modif_item_adj, pattern = "^(modif-item-adj=\")|(\")$", replacement = "")),
-          nuevo_item_adj = as.factor(str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\")$", replacement = ""))) %>% 
+          nuevo_item_adj = as.factor(str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(id))
 write_rds(tipos_ajustes_adj, path = "Csv/meta_tipos_ajustes_adj.rds")
 
@@ -233,9 +233,67 @@ tipos_compra <- read_lines(url_tipos_compra, locale = locale(encoding = "Latin1"
           solics_llamado = str_replace_all(string = solics_llamado, pattern = "^(solics-llamado=\")|(\")$", replacement = ""),
           ampliaciones = str_replace_all(string = ampliaciones, pattern = "^(ampliaciones=\")|(\")$", replacement = ""),
           tope_legal = str_replace_all(string = tope_legal, pattern = "^(tope-legal=\")|(\")$", replacement = ""),
-          pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\")$", replacement = "")) %>% 
+          pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(descripcion))
 write_rds(tipos_compra, path = "Csv/meta_tipos_compra.rds")
+
+## Tipo de documentos de proveedor ##
+url_tipos_doc_proveedor <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposDocumento.do"
+tipos_doc_proveedor <- read_lines(url_tipos_doc_proveedor, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-doc>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-doc>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-doc ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("tipo", "descripcion", "prov_rupe", "pcpd")) %>% 
+   mutate(tipo = str_replace_all(string = tipo, pattern = "^(tipo=\")|(\")", replacement = ""),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
+          prov_rupe = str_replace_all(string = prov_rupe, pattern = "^(prov-rupe=\")|(\")", replacement = ""),
+          pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\"\\s/>)$", replacement = "")) %>% 
+   filter(!is.na(descripcion))
+write_rds(tipos_doc_proveedor, path = "Csv/meta_tipos_doc_proveedor.rds")
+
+## Tipos de resolucion ##
+url_tipos_resolucion <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucion.do"
+tipos_resolucion <- read_lines(url_tipos_resolucion, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-res>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-res>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-res ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id", "descripcion")) %>% 
+   mutate(id = as.numeric(str_replace_all(string = id, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = "")) %>% 
+   filter(!is.na(id))
+write_rds(tipos_resolucion, path = "Csv/meta_tipos_resolucion.rds")
+
+## Tipos resolucion tipo adjustes adjudicacion ##
+url_tipos_resolucion_tipoajusteadj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucionTipoAjusteAdj.do"
+tipos_resolucion_tipoajusteadj <- read_lines(url_tipos_resolucion_tipoajusteadj, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-resolucion-tipoajusteadj>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-resolucion-tipoajusteadj>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-resolucion-tipoajusteadj ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_tipoajusteadj", "id_tiporesol")) %>% 
+   mutate(id_tipoajusteadj = as.numeric(str_replace_all(string = id_tipoajusteadj, pattern = "[^0-9]", replacement = "")),
+          id_tiporesol = as.numeric(str_replace_all(string = id_tiporesol, pattern = "[^0-9]", replacement = ""))) %>% 
+   filter(!is.na(id_tipoajusteadj))
+write_rds(tipos_resolucion_tipoajusteadj, path = "Csv/meta_tipos_resolucion_tipoajusteadj.rds")
+
+
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
