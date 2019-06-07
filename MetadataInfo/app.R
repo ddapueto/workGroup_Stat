@@ -4,7 +4,7 @@ library(shinythemes)
 library(here)
 library(tidyverse)
 
-#generate data
+# generate data
 path <- here::here()
 path_oferantes <- paste(path,"/Csv/metadataOferantes.csv", sep="")
 path_adj <- paste(path,"/Csv/metadataAdjudicaciones.csv", sep="")
@@ -17,13 +17,14 @@ compras <- read_csv(path_comp)
 ui <- tagList(
   shinythemes::themeSelector(),
   navbarPage(
-    "Trabajo Grupal App",
+    "Metadata - Compras Estatales",
     tabPanel("Navbar 1",
              sidebarPanel(
                radioButtons("metadata", "Metadata segun datasets: ",
                             c("Compras Estatales" = "compras" ,
-                              "Adjudicaciones" = "adj",
-                              "Oferentes" = "ofe"),selected = 'compras')
+                              "Adjudicaciones" = "adjudicaciones",
+                              "Oferentes" = "oferantes"), 
+                            selected = 'compras')
              ),
              mainPanel(
                tabsetPanel(
@@ -41,20 +42,8 @@ ui <- tagList(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  output$table <- renderTable({
-    if (input$metadata == "compras"){
-      df <- as.data.frame(compras)
-    }
-    else if (input$metadata == "adj"){
-      df <- as.data.frame(adjudicaciones)
-    }
-    else if (input$metadata == "ofe"){
-      df <- as.data.frame(oferantes)
-    }
-    df
-  })
+  output$table <- renderTable({ get(input$metadata) })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
