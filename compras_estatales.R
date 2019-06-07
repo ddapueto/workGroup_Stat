@@ -331,6 +331,25 @@ topes_legales <- read_lines(url_topes_legales, locale = locale(encoding = "Latin
    filter(!is.na(fecha_desde))
 write_rds(topes_legales, path = "Csv/meta_topes_legales.rds")
 
+## Unidades de compra centralizadas ##
+url_unidades_compra_centralizada <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUCCs.do"
+unidades_compra_centralizada <- read_lines(unidades_compra_centralizada, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<unidades-compra-centralizadas>)", replacement = "") %>% 
+   str_replace(pattern = "(</unidades-compra-centralizadas>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<unidade-compra-centralizada ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_ucc", "nom_ucc")) %>% 
+   mutate(id_ucc = str_replace_all(string = id_ucc, pattern = "[^0-9]", replacement = ""),
+          nom_ucc = str_replace_all(string = nom_ucc, pattern = "^(nom-ucc=\")|(\"\\s/>)", replacement = "")) %>% 
+   filter(!is.na(nom_ucc))
+write_rds(unidades_compra_centralizada, path = "Csv/meta_unidades_compra_centralizada.rds")
+
+
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
