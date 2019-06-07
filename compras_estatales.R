@@ -311,6 +311,27 @@ tipos_resolucion_tipocompra <- read_lines(url_tipos_resolucion_tipoajusteadj, lo
    filter(!is.na(id_tipo_resolucion))
 write_rds(tipos_resolucion_tipocompra, path = "Csv/meta_tipos_resolucion_tipocompra.rds")
 
+## Topes legales ##
+url_topes_legales <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTopesLegales.do"
+topes_legales <- read_lines(url_topes_legales, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<topes-legales>)", replacement = "") %>% 
+   str_replace(pattern = "(</topes-legales>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tope-legal ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_tipo_compra", "fecha_desde", "comun", "ampliado")) %>% 
+   mutate(id_tipo_compra = str_replace_all(string = id_tipo_compra, pattern = "^(id-tipo-compra=\")|(\")", replacement = ""),
+          fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\")", replacement = "")),
+          comun = str_replace_all(string = comun, pattern = "^(comun=\")|(\")", replacement = ""),
+          ampliado = as.numeric(str_replace_all(string = ampliado, pattern = "[^0-9]", replacement = ""))) %>% 
+   filter(!is.na(fecha_desde))
+write_rds(topes_legales, path = "Csv/meta_topes_legales.rds")
+
+
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
 compras <- compras %>% 
