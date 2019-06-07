@@ -25,6 +25,7 @@ estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "La
    mutate(id_estado_compra = as.numeric(str_replace_all(string = id_estado_compra, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "(^descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(id_estado_compra))
+write_rds(estados_compra, path = "Csv/meta_estados_de_compras.rds")
 
 ## Estados proveedor ##
 url_estados_proveedor <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteEstadosProveedor.do"
@@ -44,6 +45,7 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           val_adjs = str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1"),
           val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
    filter(!is.na(desc_estado))
+write_rds(estados_proveedor, path = "Csv/meta_estados_proveedor.rds")
 
 ## Incisos ##
 url_incisos <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteIncisos.do"
@@ -61,6 +63,7 @@ incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>%
    mutate(inciso = as.numeric(str_replace_all(string = inciso, pattern = "[^0-9]", replacement = "")),
           nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(inciso))
+write_rds(incisos, path = "Csv/meta_incisos.rds")
 
 ## Monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
@@ -80,6 +83,7 @@ monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>%
           sigla_moneda = str_replace_all(string = sigla_moneda, pattern = "(^sigla-moneda=\")|(\")", replacement = ""),
           id_moneda_arbitraje = as.numeric(str_replace_all(string = id_moneda_arbitraje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_moneda))
+write_rds(monedas, path = "Csv/meta_monedas.rds")
 
 ## Objetos gasto ##
 url_objetos_gasto <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteObjetosGasto.do"
@@ -97,6 +101,7 @@ objetos_gastos <- read_lines(url_objetos_gasto, locale = locale(encoding = "Lati
    mutate(odg = as.numeric(str_replace_all(string = odg, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(odg))
+write_rds(objetos_gastos, path = "Csv/meta_objetos_gastos.rds")
 
 ## Porcentaje suprograma PCPD ##
 url_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reportePorcentajesSubprogramasPCPD.do"
@@ -115,6 +120,7 @@ porcentaje_subprograma_pcpd <- read_lines(url_pcpd, locale = locale(encoding = "
           fecha_vigencia = lubridate::dmy(str_replace_all(string = fecha_vigencia, pattern = "^(fecha-vigencia=\")|(\")", replacement = "")),
           porcentaje = as.numeric(str_replace_all(string = porcentaje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(codigo_subprograma))
+write_rds(porcentaje_subprograma_pcpd, path = "Csv/meta_porcentaje_subprograma_pcpd.rds")
 
 ## Suprogramas PCPD ##
 url_subprogramas_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubprogramasPCPD.do"
@@ -134,6 +140,7 @@ subprogramas_pcpd <- read_lines(url_subprogramas_pcpd, locale = locale(encoding 
           fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\")", replacement = "")),
           fecha_hasta = str_replace_all(string = fecha_hasta, pattern = "^(fecha-hasta=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(codigo))
+write_rds(subprogramas_pcpd, path = "Csv/meta_subprogramas_pcpd.rds")
 
 ## Subtipos compra ##
 url_subtipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubTiposCompra.do"
