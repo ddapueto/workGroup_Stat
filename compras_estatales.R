@@ -173,6 +173,13 @@ subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "
           pub_adj = str_replace_all(string = pub_adj, pattern = "^(pub-adj=\")|(\")$", replacement = ""),
           cant_adj = str_replace_all(string = cant_adj, pattern = "^(cant-adj=\")|(\")$", replacement = "")) %>% 
    filter(!is.na(id_tipocompra))
+write_rds(subtipos_compras, path = "Csv/meta_subtipos_compras.rds")
+
+## Tipos de ajustes de adjuudiicacion ##
+url_tipos_ajustes_adj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposAjusteAdj.do"
+
+
+
 
 
 ## Base de compras ##
