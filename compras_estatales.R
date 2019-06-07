@@ -264,6 +264,8 @@ tibble(variables = names(sapply(compras, class)),
 # adjudicaciones -> detalle de la compra (de la factura)
 # oferentes -> todos los que participaron 
 
+# https://www.comprasestatales.gub.uy/comprasenlinea/codigueras
+
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
