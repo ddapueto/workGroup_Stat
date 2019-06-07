@@ -387,6 +387,29 @@ ues_topes_ampliados <- read_lines(url_ues_topes_ampliados, locale = locale(encod
    filter(!is.na(id_ue))
 write_rds(ues_topes_ampliados, path = "Csv/meta_ues_topes_ampliados.rds")
 
+## Unidades de medida ##
+url_unidades_medida <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUnidadesMedida.do"
+read_lines(url_unidades_medida, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<unidades-medida>)", replacement = "") %>% 
+   str_replace(pattern = "(</unidades-medida>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<unidades-medida ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3"),
+          x = if_else(str_detect(string = x, pattern = "fecha-baja") == FALSE,
+                      str_replace(string = x, pattern = "\"(\\s/>)$", replacement = "\"@@\\1"), x)) %>% 
+   separate(x, sep = "@",
+            into = c("cod", "descripcion", "fecha_baja", "motivo_baja")) %>% 
+   mutate(cod = as.numeric(str_replace_all(string = cod, pattern = "[^0-9]", replacement = "")),
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
+          fecha_baja = lubridate::dmy(str_replace_all(string = fecha_baja, pattern = "^(fecha-baja=\")|(\")", replacement = "")),
+          motivo_baja = str_replace_all(string = motivo_baja, pattern = "^(motivo-baja=\")|(\"\\s/>)$", replacement = "")) %>% 
+   head(12)
+   filter(!is.na(id_ue))
+write_rds(ues_topes_ampliados, path = "Csv/meta_ues_topes_ampliados.rds")
+
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
