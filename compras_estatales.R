@@ -333,14 +333,14 @@ write_rds(topes_legales, path = "Csv/meta_topes_legales.rds")
 
 ## Unidades de compra centralizadas ##
 url_unidades_compra_centralizada <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUCCs.do"
-unidades_compra_centralizada <- read_lines(unidades_compra_centralizada, locale = locale(encoding = "Latin1"))[3] %>% 
+unidades_compra_centralizada <- read_lines(url_unidades_compra_centralizada, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<unidades-compra-centralizadas>)", replacement = "") %>% 
    str_replace(pattern = "(</unidades-compra-centralizadas>)$", replacement = "") %>% 
    str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
    str_split(pattern = "\\n") %>% 
    .[[1]] %>% 
    tibble(x = .) %>% 
-   mutate(x = str_replace(string = x, pattern = "<unidade-compra-centralizada ", replacement = ""),
+   mutate(x = str_replace(string = x, pattern = "<unidad-compra-centralizada ", replacement = ""),
           x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
    separate(x, sep = "@",
             into = c("id_ucc", "nom_ucc")) %>% 
@@ -348,6 +348,25 @@ unidades_compra_centralizada <- read_lines(unidades_compra_centralizada, locale 
           nom_ucc = str_replace_all(string = nom_ucc, pattern = "^(nom-ucc=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(nom_ucc))
 write_rds(unidades_compra_centralizada, path = "Csv/meta_unidades_compra_centralizada.rds")
+
+## Unidades de compra centralizadas ##
+url_unidades_ejecutoras <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUnidadesEjecutoras.do"
+unidades_ejecutoras <- read_lines(url_unidades_ejecutoras, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<unidades-ejecutoras>)", replacement = "") %>% 
+   str_replace(pattern = "(</unidades-ejecutoras>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<unidad-ejecutora ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_inciso", "id_ue", "nom_ue")) %>% 
+   mutate(id_inciso = as.numeric(str_replace_all(string = id_inciso, pattern = "[^0-9]", replacement = "")),
+          id_ue = as.numeric(str_replace_all(string = id_ue, pattern = "[^0-9]", replacement = "")),
+          nom_ue = str_replace_all(string = nom_ue, pattern = "^(nom-ue=\")|(\"\\s/>)", replacement = "")) %>% 
+   filter(!is.na(id_ue))
+write_rds(unidades_ejecutoras, path = "Csv/meta_unidades_ejecutoras.rds")
 
 
 
