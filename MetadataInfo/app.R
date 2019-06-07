@@ -13,7 +13,7 @@ oferantes <- read_csv(path_oferantes)
 adjudicaciones <- read_csv(path_adj)
 compras <- read_csv(path_comp)
 
-#create Ui 
+# create Ui 
 ui <- tagList(
   shinythemes::themeSelector(),
   navbarPage(
@@ -28,8 +28,8 @@ ui <- tagList(
              ),
              mainPanel(
                tabsetPanel(
-                 tabPanel("Metadata Info",
-                          h4("Table"),
+                 tabPanel("Metadata",
+                          # h4("Metadatos"),
                           tableOutput("table")
                           
                  ),
@@ -42,7 +42,11 @@ ui <- tagList(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  output$table <- renderTable({ get(input$metadata) })
+  output$table <- function() {
+    get(input$metadata) %>% 
+      kableExtra::kable() %>% 
+      kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "responsive"), fixed_thead = TRUE)
+  }
 }
 
 # Run the application 
