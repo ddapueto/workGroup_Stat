@@ -293,7 +293,23 @@ tipos_resolucion_tipoajusteadj <- read_lines(url_tipos_resolucion_tipoajusteadj,
    filter(!is.na(id_tipoajusteadj))
 write_rds(tipos_resolucion_tipoajusteadj, path = "Csv/meta_tipos_resolucion_tipoajusteadj.rds")
 
-
+## Tipos resolucion tipo compra ##
+url_tipos_resolucion_tipocompra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucionCompra.do"
+tipos_resolucion_tipocompra <- read_lines(url_tipos_resolucion_tipoajusteadj, locale = locale(encoding = "Latin1"))[3] %>% 
+   str_replace(pattern = "^(<tipos-resolucion-compra>)", replacement = "") %>% 
+   str_replace(pattern = "(</tipos-resolucion-compra>)$", replacement = "") %>% 
+   str_replace_all(pattern = "/>", replacement = "/>\\\n") %>% 
+   str_split(pattern = "\\n") %>% 
+   .[[1]] %>% 
+   tibble(x = .) %>% 
+   mutate(x = str_replace(string = x, pattern = "<tipo-resolucion-compra ", replacement = ""),
+          x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
+   separate(x, sep = "@",
+            into = c("id_tipo_resolucion", "id_tipo_compra")) %>% 
+   mutate(id_tipo_resolucion = as.numeric(str_replace_all(string = id_tipo_resolucion, pattern = "[^0-9]", replacement = "")),
+          id_tipo_compra = as.numeric(str_replace_all(string = id_tipo_compra, pattern = "[^0-9]", replacement = ""))) %>% 
+   filter(!is.na(id_tipo_resolucion))
+write_rds(tipos_resolucion_tipocompra, path = "Csv/meta_tipos_resolucion_tipocompra.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
