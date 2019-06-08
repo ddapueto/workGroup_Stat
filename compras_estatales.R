@@ -24,7 +24,7 @@ estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "La
             into = c("id_estado_compra", "descripcion")) %>% 
    mutate(id_estado_compra = as.numeric(str_replace_all(string = id_estado_compra, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "(^descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
-   filter(!is.na(id_estado_compra))
+   filter(!is.na(descripcion))
 write_rds(estados_compra, path = "Csv/meta_estado_de_compra.rds")
 
 ## Estados proveedor ##
@@ -40,10 +40,10 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
    separate(x, sep = "@",
             into = c("estado", "desc_estado", "val_adjs", "val_amps")) %>% 
-   mutate(estado = str_to_title(str_replace_all(string = estado, pattern = "^(estado=\")|(\")$", replacement = "")),
-          desc_estado = str_replace_all(string = desc_estado, pattern = "(^desc-estado=\")|(\")$", replacement = ""),
-          val_adjs = str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1"),
-          val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
+   mutate(estado = as.factor(str_to_title(str_replace_all(string = estado, pattern = "^(estado=\")|(\")$", replacement = ""))),
+          desc_estado = as.factor(str_replace_all(string = desc_estado, pattern = "(^desc-estado=\")|(\")$", replacement = "")),
+          val_adjs = as.factor(str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1")),
+          val_amps = as.factor(str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1"))) %>% 
    filter(!is.na(desc_estado))
 write_rds(estados_proveedor, path = "Csv/meta_estado_proveedor.rds")
 
@@ -271,7 +271,7 @@ tipos_resolucion <- read_lines(url_tipos_resolucion, locale = locale(encoding = 
    separate(x, sep = "@",
             into = c("id", "descripcion")) %>% 
    mutate(id = as.numeric(str_replace_all(string = id, pattern = "[^0-9]", replacement = "")),
-          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = "")) %>% 
+          descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(id))
 write_rds(tipos_resolucion, path = "Csv/meta_tipos_resolucion.rds")
 
@@ -411,20 +411,21 @@ write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
-compras %>% 
+compras <- compras %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
           es_reiteracion = fct_recode(es_reiteracion, "No" = "N", "Yes" = "S"),
-          estado_compra = as.factor(estado_compra),
+          estado_compra = factor(estado_compra, levels = estados_compra$id_estado_compra, labels = estados_compra$descripcion),
           fecha_compra = lubridate::dmy(fecha_compra), # comienzo licitación
           fecha_pub_adj = lubridate::dmy_hm(fecha_pub_adj),
           fondos_rotatorios = fct_recode(fondos_rotatorios, "No" = "N", "Yes" = "S"),
-          id_inciso = as.factor(id_inciso),
-          id_moneda_monto_adj = factor(id_moneda_monto_adj, levels = monedas$desc_moneda),
-          id_tipo_resol = as.factor(id_tipo_resol),
-          id_tipocompra = as.factor(id_tipocompra),
-          id_ue = as.factor(id_ue),
+          id_inciso = factor(id_inciso, levels = incisos$inciso, labels = incisos$nom_inciso),
+          id_moneda_monto_adj = factor(id_moneda_monto_adj, levels = monedas$id_moneda, labels = monedas$desc_moneda),
+          id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id, labels = tipos_resolucion$descripcion),
+          id_tipocompra = factor(id_tipocompra, levels = tipos_compra$id, labels = tipos_compra$descripcion),
+          id_ue = factor(id_ue, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue),
           nro_ampliacion = as.factor(nro_ampliacion),
           subtipo_compra = as.factor(subtipo_compra))
+write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes
 tibble(variables = names(sapply(compras, class)),
