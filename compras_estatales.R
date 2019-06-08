@@ -25,7 +25,7 @@ estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "La
    mutate(id_estado_compra = as.numeric(str_replace_all(string = id_estado_compra, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "(^descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(id_estado_compra))
-write_rds(estados_compra, path = "Csv/meta_estados_de_compras.rds")
+write_rds(estados_compra, path = "Csv/meta_estado_de_compra.rds")
 
 ## Estados proveedor ##
 url_estados_proveedor <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteEstadosProveedor.do"
@@ -45,7 +45,7 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           val_adjs = str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1"),
           val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
    filter(!is.na(desc_estado))
-write_rds(estados_proveedor, path = "Csv/meta_estados_proveedor.rds")
+write_rds(estados_proveedor, path = "Csv/meta_estado_proveedor.rds")
 
 ## Incisos ##
 url_incisos <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteIncisos.do"
@@ -63,7 +63,7 @@ incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>%
    mutate(inciso = as.numeric(str_replace_all(string = inciso, pattern = "[^0-9]", replacement = "")),
           nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(inciso))
-write_rds(incisos, path = "Csv/meta_incisos.rds")
+write_rds(incisos, path = "Csv/meta_id_inciso.rds")
 
 ## Monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
@@ -275,7 +275,7 @@ tipos_resolucion <- read_lines(url_tipos_resolucion, locale = locale(encoding = 
    filter(!is.na(id))
 write_rds(tipos_resolucion, path = "Csv/meta_tipos_resolucion.rds")
 
-## Tipos resolucion tipo adjustes adjudicacion ##
+## Tipos resolucion tipo adjudicacion adjustes ##
 url_tipos_resolucion_tipoajusteadj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucionTipoAjusteAdj.do"
 tipos_resolucion_tipoajusteadj <- read_lines(url_tipos_resolucion_tipoajusteadj, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<tipos-resolucion-tipoajusteadj>)", replacement = "") %>% 
@@ -411,7 +411,7 @@ write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
-compras <- compras %>% 
+compras %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
           es_reiteracion = fct_recode(es_reiteracion, "No" = "N", "Yes" = "S"),
           estado_compra = as.factor(estado_compra),
