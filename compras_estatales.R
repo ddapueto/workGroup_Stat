@@ -422,7 +422,7 @@ compras <- compras %>%
           id_moneda_monto_adj = factor(id_moneda_monto_adj, levels = monedas$id_moneda, labels = monedas$desc_moneda),
           id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id, labels = tipos_resolucion$descripcion),
           id_tipocompra = factor(id_tipocompra, levels = tipos_compra$id, labels = tipos_compra$descripcion),
-          id_ue = factor(id_ue, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue),
+          # id_ue = factor(id_ue, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue),
           nro_ampliacion = as.factor(nro_ampliacion),
           subtipo_compra = as.factor(subtipo_compra))
 write_rds(compras, path = "Csv/compras.rds")
@@ -435,6 +435,14 @@ tibble(variables = names(sapply(compras, class)),
    count(classes)
 
 # adjudicaciones -> detalle de la compra (de la factura)
+adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv")
+adjudicaciones %>% 
+   rename(id_compra = `@id_compra`) %>% 
+   mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda),
+          id_unidad = factor(id_unidad, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue)) %>% 
+   select(-(1:6))
+
+
 # oferentes -> todos los que participaron 
 
 
