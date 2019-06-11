@@ -411,7 +411,7 @@ write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
-compras %>% 
+compras <- compras %>% 
    left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
    left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
    left_join(select(monedas, id_moneda, desc_moneda), by = c("id_moneda_monto_adj" = "id_moneda")) %>% 
@@ -436,14 +436,10 @@ compras %>%
           fecha_pub_adj = lubridate::dmy_hm(fecha_pub_adj),
           fondos_rotatorios = fct_recode(fondos_rotatorios, "No" = "N", "Yes" = "S"),
           id_inciso = factor(id_inciso, levels = incisos$inciso),
-          id_moneda = factor(id_moneda, levels = monedas$id_moneda)) %>% 
-   select(-(1:11))
-# id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id, labels = tipos_resolucion$descripcion),
-# id_tipocompra = factor(id_tipocompra, levels = tipos_compra$id, labels = tipos_compra$descripcion),
-# nro_ampliacion = as.factor(nro_ampliacion),
-# subtipo_compra = as.factor(subtipo_compra)
-
-
+          id_moneda = factor(id_moneda, levels = monedas$id_moneda),
+          id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id),
+          id_tipo_compra = factor(id_tipo_compra, levels = tipos_compra$id),
+          subtipo_compra = as.factor(subtipo_compra))
 write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes

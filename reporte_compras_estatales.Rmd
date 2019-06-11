@@ -1,0 +1,33 @@
+---
+title: "Compras Estatales"
+author: "Daniel Czarnievicz"
+date: "Última actualización: `r format(Sys.time(), '%A %d %B, %Y, %I:%M %p')`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    toc_float: 
+      smooth_scroll: true
+    theme: united
+    highlight: tango
+    fig_caption: true
+    code_folding: hide
+    includes:
+      in_header: header.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+compras <- readr::read_rds("Csv/compras.rds")
+```
+
+
+
+
+
+
