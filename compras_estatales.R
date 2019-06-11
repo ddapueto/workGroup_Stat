@@ -40,10 +40,10 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
    separate(x, sep = "@",
             into = c("estado", "desc_estado", "val_adjs", "val_amps")) %>% 
-   mutate(estado = as.factor(str_to_title(str_replace_all(string = estado, pattern = "^(estado=\")|(\")$", replacement = ""))),
-          desc_estado = as.factor(str_replace_all(string = desc_estado, pattern = "(^desc-estado=\")|(\")$", replacement = "")),
-          val_adjs = as.factor(str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1")),
-          val_amps = as.factor(str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1"))) %>% 
+   mutate(estado = str_to_title(str_replace_all(string = estado, pattern = "^(estado=\")|(\")$", replacement = "")),
+          desc_estado = str_replace_all(string = desc_estado, pattern = "(^desc-estado=\")|(\")$", replacement = ""),
+          val_adjs = str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1"),
+          val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
    filter(!is.na(desc_estado))
 write_rds(estados_proveedor, path = "Csv/meta_estado_proveedor.rds")
 
@@ -62,7 +62,7 @@ incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>%
             into = c("inciso", "nom_inciso")) %>% 
    mutate(inciso = as.numeric(str_replace_all(string = inciso, pattern = "[^0-9]", replacement = "")),
           nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
-   filter(!is.na(inciso))
+   filter(!is.na(nom_inciso))
 write_rds(incisos, path = "Csv/meta_id_inciso.rds")
 
 ## Monedas ##
@@ -142,7 +142,7 @@ subprogramas_pcpd <- read_lines(url_subprogramas_pcpd, locale = locale(encoding 
    filter(!is.na(codigo))
 write_rds(subprogramas_pcpd, path = "Csv/meta_subprogramas_pcpd.rds")
 
-## Subtipos compra ##
+## Subtipos compra (falta codificar correctamente condicion precios oferta - revisar en caso de usar -) ##
 url_subtipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubTiposCompra.do"
 subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<subtipos-compra>)", replacement = "") %>% 
@@ -193,16 +193,16 @@ tipos_ajustes_adj <- read_lines(url_tipos_ajustes_adj, locale = locale(encoding 
                      "nuevo_item_adj")) %>% 
    mutate(id = as.numeric(str_replace_all(string = id, pattern = "[^0-9]", replacement = "")),
           descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
-          reiteracion = as.factor(str_replace_all(string = reiteracion, pattern = "^(reiteracion=\")|(\")", replacement = "")),
-          resolucion = as.factor(str_replace_all(string = resolucion, pattern = "^(resolucion=\")|(\")$", replacement = "")),
-          pub_llamado = as.factor(str_replace_all(string = pub_llamado, pattern = "^(pub-llamado=\")|(\")$", replacement = "")),
-          nuevo_item_ofe = as.factor(str_replace_all(string = nuevo_item_ofe, pattern = "^(nuevo-item-ofe=\")|(\")$", replacement = "")),
-          modif_item_adj = as.factor(str_replace_all(string = modif_item_adj, pattern = "^(modif-item-adj=\")|(\")$", replacement = "")),
-          nuevo_item_adj = as.factor(str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\"\\s/>)$", replacement = ""))) %>% 
+          reiteracion = str_replace_all(string = reiteracion, pattern = "^(reiteracion=\")|(\")", replacement = ""),
+          resolucion = str_replace_all(string = resolucion, pattern = "^(resolucion=\")|(\")$", replacement = ""),
+          pub_llamado = str_replace_all(string = pub_llamado, pattern = "^(pub-llamado=\")|(\")$", replacement = ""),
+          nuevo_item_ofe = str_replace_all(string = nuevo_item_ofe, pattern = "^(nuevo-item-ofe=\")|(\")$", replacement = ""),
+          modif_item_adj = str_replace_all(string = modif_item_adj, pattern = "^(modif-item-adj=\")|(\")$", replacement = ""),
+          nuevo_item_adj = str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(id))
 write_rds(tipos_ajustes_adj, path = "Csv/meta_tipos_ajustes_adj.rds")
 
-## Tipos dee compra ##
+## Tipos de compra ##
 url_tipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposCompra.do"
 tipos_compra <- read_lines(url_tipos_compra, locale = locale(encoding = "Latin1"))[3] %>% 
    str_replace(pattern = "^(<tipos-compra>)", replacement = "") %>% 
@@ -228,7 +228,7 @@ tipos_compra <- read_lines(url_tipos_compra, locale = locale(encoding = "Latin1"
           descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\")", replacement = ""),
           oferta_economica = str_replace_all(string = oferta_economica, pattern = "^(oferta-economica=\")|(\")", replacement = ""),
           acto_apertura = str_replace_all(string = acto_apertura, pattern = "^(acto-apertura=\")|(\")$", replacement = ""),
-          plazo_min_oferta = str_replace_all(string = plazo_min_oferta, pattern = "^(plazo-min-oferta=\")|(\")$", replacement = ""),
+          plazo_min_oferta = as.numeric(str_replace_all(string = plazo_min_oferta, pattern = "^(plazo-min-oferta=\")|(\")$", replacement = "")),
           resolucion_obligatoria = str_replace_all(string = resolucion_obligatoria, pattern = "^(resolucion-obligatoria=\")|(\")$", replacement = ""),
           solics_llamado = str_replace_all(string = solics_llamado, pattern = "^(solics-llamado=\")|(\")$", replacement = ""),
           ampliaciones = str_replace_all(string = ampliaciones, pattern = "^(ampliaciones=\")|(\")$", replacement = ""),
@@ -326,7 +326,7 @@ topes_legales <- read_lines(url_topes_legales, locale = locale(encoding = "Latin
             into = c("id_tipo_compra", "fecha_desde", "comun", "ampliado")) %>% 
    mutate(id_tipo_compra = str_replace_all(string = id_tipo_compra, pattern = "^(id-tipo-compra=\")|(\")", replacement = ""),
           fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\")", replacement = "")),
-          comun = str_replace_all(string = comun, pattern = "^(comun=\")|(\")", replacement = ""),
+          comun = as.numeric(str_replace_all(string = comun, pattern = "^(comun=\")|(\")", replacement = "")),
           ampliado = as.numeric(str_replace_all(string = ampliado, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(fecha_desde))
 write_rds(topes_legales, path = "Csv/meta_topes_legales.rds")
@@ -344,7 +344,7 @@ unidades_compra_centralizada <- read_lines(url_unidades_compra_centralizada, loc
           x = str_replace_all(string = x, pattern = "(\")([[:space:]])([a-z])", replacement = "\\1@\\3")) %>% 
    separate(x, sep = "@",
             into = c("id_ucc", "nom_ucc")) %>% 
-   mutate(id_ucc = str_replace_all(string = id_ucc, pattern = "[^0-9]", replacement = ""),
+   mutate(id_ucc = as.numeric(str_replace_all(string = id_ucc, pattern = "[^0-9]", replacement = "")),
           nom_ucc = str_replace_all(string = nom_ucc, pattern = "^(nom-ucc=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(nom_ucc))
 write_rds(unidades_compra_centralizada, path = "Csv/meta_unidades_compra_centralizada.rds")
@@ -411,20 +411,39 @@ write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
 
 ## Base de compras ##
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
-compras <- compras %>% 
+compras %>% 
+   left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
+   left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
+   left_join(select(monedas, id_moneda, desc_moneda), by = c("id_moneda_monto_adj" = "id_moneda")) %>% 
+   left_join(select(tipos_compra, id, descripcion), by = c("id_tipocompra" = "id")) %>% 
+   left_join(unidades_ejecutoras, by = c("id_inciso" = "id_inciso", "id_ue" = "id_ue")) %>% 
+   left_join(rename(tipos_resolucion, tipo_resol = descripcion), by = c("id_tipo_resol" = "id")) %>% 
+   rename(id_estado_compra = estado_compra,
+          id_moneda = id_moneda_monto_adj,
+          estado_compra = descripcion.x,
+          inciso = nom_inciso,
+          moneda = desc_moneda,
+          id_tipo_compra = id_tipocompra,
+          tipo_compra = descripcion.y,
+          ue = nom_ue) %>% 
+   select(apel, arch_adj, es_reiteracion, id_estado_compra, estado_compra, starts_with("fecha"), fondos_rotatorios, id_compra,
+          id_inciso, inciso, id_ue, ue, id_moneda, moneda, num_resol, id_tipo_resol, tipo_resol, id_tipo_compra, tipo_compra, 
+          everything()) %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
           es_reiteracion = fct_recode(es_reiteracion, "No" = "N", "Yes" = "S"),
-          estado_compra = factor(estado_compra, levels = estados_compra$id_estado_compra, labels = estados_compra$descripcion),
-          fecha_compra = lubridate::dmy(fecha_compra), # comienzo licitación
+          id_estado_compra = factor(id_estado_compra, levels = estados_compra$id_estado_compra),
+          fecha_compra = lubridate::dmy(fecha_compra),
           fecha_pub_adj = lubridate::dmy_hm(fecha_pub_adj),
           fondos_rotatorios = fct_recode(fondos_rotatorios, "No" = "N", "Yes" = "S"),
-          id_inciso = factor(id_inciso, levels = incisos$inciso, labels = incisos$nom_inciso),
-          id_moneda_monto_adj = factor(id_moneda_monto_adj, levels = monedas$id_moneda, labels = monedas$desc_moneda),
-          id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id, labels = tipos_resolucion$descripcion),
-          id_tipocompra = factor(id_tipocompra, levels = tipos_compra$id, labels = tipos_compra$descripcion),
-          # id_ue = factor(id_ue, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue),
-          nro_ampliacion = as.factor(nro_ampliacion),
-          subtipo_compra = as.factor(subtipo_compra))
+          id_inciso = factor(id_inciso, levels = incisos$inciso),
+          id_moneda = factor(id_moneda, levels = monedas$id_moneda)) %>% 
+   select(-(1:11))
+# id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id, labels = tipos_resolucion$descripcion),
+# id_tipocompra = factor(id_tipocompra, levels = tipos_compra$id, labels = tipos_compra$descripcion),
+# nro_ampliacion = as.factor(nro_ampliacion),
+# subtipo_compra = as.factor(subtipo_compra)
+
+
 write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes
