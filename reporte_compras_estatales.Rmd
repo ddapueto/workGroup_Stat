@@ -18,14 +18,48 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::knit_hooks$set(inline = function(x) {prettyNum(x, big.mark = ".")})
 library(tidyverse)
 ```
 
 ```{r}
 compras <- readr::read_rds("Csv/compras.rds")
+adjudicaciones <- readr::read_rds("Csv/adjudicaciones.rds")
+oferentes <- readr::read_rds("Csv/oferentes.rds")
 ```
 
+# Análisis oferentes {.tabset .tabset-fade .tabset-pills}
+
+```{r cant_compras_oferentes}
+cant_compras_oferentes <- oferentes %>% 
+  count(id_compra) %>% 
+  dim() %>% 
+  .[1]
+```
+
+```{r cant_provs_oferentes}
+cant_provs_oferentes <- oferentes %>% 
+  count(nro_doc_prov) %>% 
+  dim() %>% 
+  .[1]
+```
+
+La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cant_compras_oferentes` compras. El proveedor más frecuente es Nalfer SA.
+
+```{r}
+oferentes %>% 
+  group_by(nro_doc_prov, nombre_comercial) %>% 
+  summarise(n_compras = n_distinct(id_compra)) %>% 
+  arrange(desc(n_compras)) %>% 
+  select(nombre_comercial, nro_doc_prov, n_compras) %>% 
+  head(20) %>%
+  kableExtra::kable(format.args = list(big.mark = ".", decimal.mark = ","), 
+                    caption = "Principales proveedores del Estado en 2018 y 2019",
+                    col.names = c("Proveedor", "ID", "Cantidad")) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+  # kableExtra::scroll_box(width = "100%", height = "200px")
+```
 
 
 
