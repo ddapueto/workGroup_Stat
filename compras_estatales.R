@@ -451,15 +451,15 @@ tibble(variables = names(sapply(compras, class)),
 
 # adjudicaciones -> detalle de la compra (de la factura)
 adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv")
-adjudicaciones %>% 
+adjudicaciones <- adjudicaciones %>% 
    rename(id_compra = `@id_compra`) %>% 
    mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda),
           id_unidad = factor(id_unidad, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue)) %>% 
    select(-(1:6))
-
+write_rds(adjudicaciones, path = "Csv/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
-
+oferentes <- readr::read_csv("Csv/comprasEstatalesOferantesrefactor.csv")
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
