@@ -460,6 +460,7 @@ write_rds(adjudicaciones, path = "Csv/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
 oferentes <- readr::read_csv("Csv/comprasEstatalesOferantesrefactor.csv")
+write_rds(oferentes, path = "Csv/oferentes.rds")
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
