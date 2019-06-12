@@ -62,6 +62,14 @@ oferentes %>%
 ```
 
 
+```{r}
+compras %>% 
+   filter(fecha_compra > "2018-01-01") %>%
+   ggplot() +
+   geom_point(aes(floor_date(fecha_compra, "month"), log(monto_adj)))
+```
 
+
+http://www.sthda.com/english/articles/32-r-graphics-essentials/128-plot-time-series-data-using-ggplot/
 
 
