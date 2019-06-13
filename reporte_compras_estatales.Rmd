@@ -94,11 +94,13 @@ oferentes %>%
 
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)"}
 # Falta tasas de cambio
-group_by(floor_date(fecha_compra, "month")) %>% 
+compras %>% 
+  filter("2018-01-01" < fecha_compra, fecha_compra < "2019-01-01", monto_adj > 0) %>%
+  group_by(floor_date(fecha_compra, "week")) %>% 
   summarise(total_comprado = sum(monto_adj)) %>% 
   ggplot() +
-  geom_line(aes(`floor_date(fecha_compra, "month")`, total_comprado)) +
-  labs(x = NULL, y = "Monto total adjudicado por mes\n(equivalente en millones de pesos corrientes)\n") +
+  geom_line(aes(`floor_date(fecha_compra, "week")`, total_comprado)) +
+  labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
   scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", scale = 1/1e6)) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
@@ -107,10 +109,10 @@ group_by(floor_date(fecha_compra, "month")) %>%
 ```{r, fig.align='center', fig.cap="Evolución de la cantidad de adjudicaciones mensuales"}
 compras %>% 
   filter("2018-01-01" < fecha_compra, fecha_compra < "2019-01-01", monto_adj > 0) %>%
-  group_by(floor_date(fecha_compra, "month")) %>% 
+  group_by(floor_date(fecha_compra, "week")) %>% 
   tally() %>% 
   ggplot() +
-  geom_line(aes(`floor_date(fecha_compra, "month")`, n)) +
+  geom_line(aes(`floor_date(fecha_compra, "week")`, n)) +
   labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
   scale_y_continuous(labels = scales::number_format(big.mark = ".")) +
   ggthemes::theme_economist() +
