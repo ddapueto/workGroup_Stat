@@ -93,10 +93,7 @@ oferentes %>%
 # Análisis compras
 
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)"}
-# falta convertir los montos que no son en pesos, a pesos
-compras %>% 
-  filter("2018-01-01" < fecha_compra, fecha_compra < "2019-01-01", monto_adj > 0) %>%
-  group_by(floor_date(fecha_compra, "month")) %>% 
+group_by(floor_date(fecha_compra, "month")) %>% 
   summarise(total_comprado = sum(monto_adj)) %>% 
   ggplot() +
   geom_line(aes(`floor_date(fecha_compra, "month")`, total_comprado)) +
