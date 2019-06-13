@@ -93,6 +93,7 @@ oferentes %>%
 # Análisis compras
 
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)"}
+# Falta tasas de cambio
 group_by(floor_date(fecha_compra, "month")) %>% 
   summarise(total_comprado = sum(monto_adj)) %>% 
   ggplot() +
