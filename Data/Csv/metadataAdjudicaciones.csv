@@ -1,0 +1,22 @@
+Atributo,Tipo ,Descripcion
+cant_adj,"float(15,2)",Cantidad adjudicada
+desc_articulo,varchar(255),Descripción del artículo
+desc_marca,varchar(40),Descripción de la marca
+id_articulo,int(6),Identificación del artículo dentro del catalogo
+id_compra,varchar(9),Identificador de la compra
+id_moneda,int(2),Moneda asociada
+id_unidad,int(3),Identificación de la unidad
+medida_presentacion,varchar(60),Descripción de la medida de la presentación
+medida_variante,varchar(60),Descripción de la medida de la variante
+nombre_comercial,varchar(255),Nombre comercial del proveedor
+nro_doc_prov,varchar(12),Número de documento del proveedor
+nro_item,int,Nro. del ítem en la compra
+precio_tot_imp,"float(15,2)",Importe total
+precio_unit,"float(15,2)",Precio Unitario
+presentacion,varchar(60),Descripción de la presentación
+tipo_doc_prov,char(1),Tipo de documento del proveedor
+unidad,varchar(30),Descripción de la unidad de medida del artículo
+unidad_medida_presentacion,varchar(30),Descripción de la unidad de medida de la presentación
+unidad_medida_variante,varchar(30),Unidad de medida de la variante del artículo
+variante,varchar(30),Descripción de la variante del artículo
+key_id,int,categorizacion de cada articulo por compra
