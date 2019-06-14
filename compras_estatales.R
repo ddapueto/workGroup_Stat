@@ -443,22 +443,24 @@ compras <- compras %>%
 write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes
-tibble(variables = names(sapply(compras, class)),
-       classes = sapply(compras, class)) %>%
-   unnest() %>% 
-   mutate(classes = if_else(classes == "POSIXct" | classes == "POSIXt", "Datetime", classes)) %>%
-   count(classes)
+# tibble(variables = names(sapply(compras, class)),
+#        classes = sapply(compras, class)) %>%
+#    unnest() %>% 
+#    mutate(classes = if_else(classes == "POSIXct" | classes == "POSIXt", "Datetime", classes)) %>%
+#    count(classes)
 
 # adjudicaciones -> detalle de la compra (de la factura)
 adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv")
 adjudicaciones <- adjudicaciones %>% 
    mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda),
           id_unidad = factor(id_unidad, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue)) %>% 
-   select(-(1:6))
+   select(-X1)
 write_rds(adjudicaciones, path = "Csv/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
 oferentes <- readr::read_csv("Csv/comprasEstatalesOferantesrefactor.csv")
+oferentes <- oferentes %>% 
+   select(-X1)
 write_rds(oferentes, path = "Csv/oferentes.rds")
 
 #################################
