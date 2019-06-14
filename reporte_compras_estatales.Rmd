@@ -57,13 +57,27 @@ oferentes %>%
   summarise(n_compras = n_distinct(id_compra)) %>% 
   ungroup() %>%
   mutate(prop = percent(n_compras / sum(n_compras), digits = 2)) %>%
-  arrange(desc(n_compras)) %>%
-  select(nombre_comercial, nro_doc_prov, n_compras, prop) %>% 
-  head(20) %>%
+  arrange(desc(n_compras, nombre_comercial)) %>%
+  select(nombre_comercial, nro_doc_prov, n_compras, prop)
+
+
+distinct(compras, nro_doc_prov)
+distinct(oferentes, nro_doc_prov)
+
+  tail(20) %>%
   kable(format = "html", format.args = list(big.mark = ".", decimal.mark = ","), escape = FALSE,
         caption = "Principales oferentes del Estado en 2018 y 2019",
         col.names = c("Proveedor", "ID", "Cantidad", "Proporción")) %>%
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+```{r}
+compras %>%
+  left_join(select(oferentes, id_compra, nombre_comercial, nro_doc_prov), by = "id_compra") %>%
+  group_by(nombre_comercial, nro_doc_prov) %>%
+  summarise(total = n_distinct(id_compra)) %>%
+  arrange(desc(total)) %>% 
+  tail(50)
 ```
 
 ```{r eval=FALSE}
@@ -122,4 +136,22 @@ compras %>%
 <!--
 http://www.sthda.com/english/articles/32-r-graphics-essentials/128-plot-time-series-data-using-ggplot/
 -->
+
+```{r}
+adjudicaciones %>% 
+  group_by(id_unidad) %>% 
+  tally() %>% 
+  arrange(desc(n))
+
+compras %>% 
+  group_by()
+
+
+dim(compras)
+dim(distinct(compras, id_compra))
+
+sum(adjudicaciones$precio_tot_imp, na.rm = TRUE) / dim(adjudicaciones)[1]
+```
+
+
 
