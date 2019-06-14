@@ -410,7 +410,7 @@ unidades_medida <- read_lines(url_unidades_medida, locale = locale(encoding = "L
 write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
 
 ## Base de compras ##
-compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv")
+compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd"))
 compras <- compras %>% 
    left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
    left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
@@ -426,7 +426,7 @@ compras <- compras %>%
           id_tipo_compra = id_tipocompra,
           tipo_compra = descripcion.y,
           ue = nom_ue) %>% 
-   select(apel, arch_adj, es_reiteracion, id_estado_compra, estado_compra, starts_with("fecha"), fondos_rotatorios, id_compra,
+   select(-X1, apel, arch_adj, es_reiteracion, id_estado_compra, estado_compra, starts_with("fecha"), fondos_rotatorios, id_compra,
           id_inciso, inciso, id_ue, ue, id_moneda, moneda, num_resol, id_tipo_resol, tipo_resol, id_tipo_compra, tipo_compra, 
           everything()) %>% 
    mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
@@ -452,7 +452,6 @@ tibble(variables = names(sapply(compras, class)),
 # adjudicaciones -> detalle de la compra (de la factura)
 adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv")
 adjudicaciones <- adjudicaciones %>% 
-   rename(id_compra = `@id_compra`) %>% 
    mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda),
           id_unidad = factor(id_unidad, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue)) %>% 
    select(-(1:6))
