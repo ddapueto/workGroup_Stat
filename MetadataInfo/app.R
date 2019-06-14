@@ -13,6 +13,18 @@ oferantes <- read_csv(path_oferantes)
 adjudicaciones <- read_csv(path_adj)
 compras <- read_csv(path_comp)
 
+compList <- c(
+  #"apel", "es_reiteracion", 
+  "estado_compra", 
+  #"fondos_rotatorios",
+  "id_inciso","id_moneda","id_tipo_resol","id_tipocompra","id_ue",
+  "subtipo_compra",
+  "id_ucc"
+  )
+adjList <- c("id_moneda", "id_unidad","tipo_doc_prov")
+
+ofeList <- c("tipo_doc_prov")
+
 # create Ui 
 ui <- tagList(
   shinythemes::themeSelector(),
@@ -28,19 +40,20 @@ ui <- tagList(
                conditionalPanel(
                  condition = "input.metadata == 'compras'",
                  selectInput("cod" , "Codigos de Atributos en Compras",
-                             unique(unlist(compras[c("Atributo")])))
+                             compList)
                ),
                conditionalPanel(
                  condition = "input.metadata == 'adjudicaciones'",
                  selectInput("cod" , "Codigos de Atributos en Adjudicaciones",
-                             unique(unlist(adjudicaciones[c("Atributo")])))
+                             adjList)
                ),
                conditionalPanel(
                  condition = "input.metadata == 'oferantes'",
                  selectInput("cod" , "Codigos de Atributos en Oferentes",
-                             unique(unlist(oferantes[c("Atributo")])))
+                             ofeList)
                ),
-               actionButton("controller", "Controller")
+               actionButton("controller", "Codigueras Existentes",icon("paper-plane"), 
+                            style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
             ),
              mainPanel(
                tabsetPanel(id = "inTabset",
