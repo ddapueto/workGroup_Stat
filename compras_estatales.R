@@ -425,6 +425,7 @@ tipo_de_cambio <- readxl::read_xls("Csv/ReporteTasasDeCambio_11-10-18.xls", shee
 # Codifica las variables
 # Convierte monedas
 # Quita compras con montos cero o negativos
+# Filtra compras anteriores a 2017
 compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd")) %>% 
    left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
    left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
@@ -457,12 +458,12 @@ compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dc
    left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
           monto_adj_pesos = monto_adj * tasa) %>% 
-   filter(monto_adj > 0)
+   filter(monto_adj > 0, fecha_compra > "2018-01-01")
 write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes
-# tibble(variables = names(sapply(compras, class)),
-#        classes = sapply(compras, class)) %>%
+# tibble(variables = names(sapply(compras, class))
+#        classes = sapply(compras, class)) %>%s
 #    unnest() %>% 
 #    mutate(classes = if_else(classes == "POSIXct" | classes == "POSIXt", "Datetime", classes)) %>%
 #    count(classes)
