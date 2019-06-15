@@ -28,6 +28,7 @@ library(tidyverse)
 library(lubridate)
 library(formattable)
 library(kableExtra)
+library(magrittr)
 ```
 
 ```{r}
@@ -38,73 +39,35 @@ oferentes <- readr::read_rds("Csv/oferentes.rds")
 
 # Análisis oferentes {.tabset .tabset-fade .tabset-pills}
 
-```{r cant_provs_oferentes}
+```{r}
+# Cantidad de oferentes
 cant_provs_oferentes <- oferentes %>% 
   count(nro_doc_prov) %>% 
   dim() %>% 
   .[1]
-```
-
-```{r cant_compras_oferentes}
-cant_compras_oferentes <- oferentes %>% 
+# Cantidad de compras
+cant_compras <- compras %>% 
   count(id_compra) %>% 
   dim() %>% 
   .[1]
 ```
 
-La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cant_compras_oferentes` compras. El proveedor más frecuente es Nalfer SA, quien participó en el 4,10% de las compras.
+La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cant_compras` compras. El proveedor más frecuente durante 2018 fue Nalfer SA, quien participó en el 4,10% de las compras.
 
 ```{r}
+# Principales oferentes del estado
 oferentes %>% 
   group_by(nro_doc_prov, nombre_comercial) %>% 
   summarise(n_compras = n_distinct(id_compra)) %>% 
   ungroup() %>%
   mutate(prop = percent(n_compras / sum(n_compras), digits = 2)) %>%
   arrange(desc(n_compras, nombre_comercial)) %>%
-  select(nombre_comercial, nro_doc_prov, n_compras, prop)
-
-
-distinct(compras, nro_doc_prov)
-distinct(oferentes, nro_doc_prov)
-
-  tail(20) %>%
+  select(nombre_comercial, nro_doc_prov, n_compras, prop) %>% 
+  head(10) %>%
   kable(format = "html", format.args = list(big.mark = ".", decimal.mark = ","), escape = FALSE,
         caption = "Principales oferentes del Estado en 2018 y 2019",
         col.names = c("Proveedor", "ID", "Cantidad", "Proporción")) %>%
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
-```
-
-```{r}
-compras %>%
-  left_join(select(oferentes, id_compra, nombre_comercial, nro_doc_prov), by = "id_compra") %>%
-  group_by(nombre_comercial, nro_doc_prov) %>%
-  summarise(total = n_distinct(id_compra)) %>%
-  arrange(desc(total)) %>% 
-  tail(50)
-```
-
-```{r eval=FALSE}
-# intento frustrado de determinar prooveeedores locales y extranjeros
-# best guess: E y X son extranjeros, el resto locales
-# missing data para más de la mitad de los proveedores
-# tipos_doc_proveedor <- readr::read_rds("Csv/meta_tipos_doc_proveedor.rds")
-# residencia <- readr::read_csv2("Csv/adjudicatariosNacionales2018.csv")
-# left_join(oferentes, select(compras, id_compra, fecha_compra), by = "id_compra") %>% 
-#   filter(fecha_compra >= "2018-01-01") %>% 
-#   distinct(nro_doc_prov, tipo_doc_prov) %>% 
-#   left_join(select(residencia, numero_doc_prov, dep_nombre), by = c("nro_doc_prov" = "numero_doc_prov"))
-# table(unique(filter(oferentes, tipo_doc_prov %in% c("C", "G", "N", "R", "T"))$nro_doc_prov) %in% residencia$numero_doc_prov)
-# oferentes %>% 
-#   left_join(select(residencia, numero_doc_prov, dep_nombre), by = c("nro_doc_prov" = "numero_doc_prov")) %>% 
-#   count(tipo_doc_prov, dep_nombre) %>% 
-#   left_join(select(tipos_doc_proveedor, tipo, descripcion), by = c("tipo_doc_prov" = "tipo")) %>% 
-#   select(descripcion, tipo_doc_prov, dep_nombre, n) %>% 
-#   filter(is.na(dep_nombre))
-#   
-# arrange(desc(n)) %>% 
-#   kable(format = "html", format.args = list(big.mark = ".", decimal.mark = ","),
-#         ) %>% 
-#   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
 
 # Análisis compras
@@ -112,49 +75,61 @@ compras %>%
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)"}
 # Falta tasas de cambio
 compras %>% 
-  filter("2018-01-01" < fecha_compra, fecha_compra < "2019-01-01", monto_adj > 0) %>%
+  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
   group_by(floor_date(fecha_compra, "week")) %>% 
-  summarise(total_comprado = sum(monto_adj)) %>% 
+  summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>% 
   ggplot() +
-  geom_line(aes(`floor_date(fecha_compra, "week")`, total_comprado)) +
+  geom_line(aes(`floor_date(fecha_compra, "week")`, total_comprado), color = "purple") +
   labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
-  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", scale = 1/1e6)) +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
 ```
 
 ```{r, fig.align='center', fig.cap="Evolución de la cantidad de adjudicaciones mensuales"}
 compras %>% 
-  filter("2018-01-01" < fecha_compra, fecha_compra < "2019-01-01", monto_adj > 0) %>%
+  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
   group_by(floor_date(fecha_compra, "week")) %>% 
   tally() %>% 
   ggplot() +
-  geom_line(aes(`floor_date(fecha_compra, "week")`, n)) +
+  geom_line(aes(`floor_date(fecha_compra, "week")`, n), color = "orange") +
   labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
-  scale_y_continuous(labels = scales::number_format(big.mark = ".")) +
+  scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
 ```
 
-<!--
-http://www.sthda.com/english/articles/32-r-graphics-essentials/128-plot-time-series-data-using-ggplot/
--->
-
-```{r}
-adjudicaciones %>% 
-  group_by(id_unidad) %>% 
-  tally() %>% 
-  arrange(desc(n))
-
+```{r fig.align='center', fig.cap="Asociación entre el tiempo que requiró concluir la compra (span) y el monto involucrado en la compra según moneda de la compra. No parecería existir una relación entre las mismas."}
 compras %>% 
-  group_by()
-
-
-dim(compras)
-dim(distinct(compras, id_compra))
-
-sum(adjudicaciones$precio_tot_imp, na.rm = TRUE) / dim(adjudicaciones)[1]
+  mutate(span = (fecha_compra %--% fecha_pub_adj) %/% hours(1),
+         pesos = if_else(id_moneda == 0, "Compra en pesos", "Compra en otra moneda")) %>% 
+  ggplot() +
+  geom_point(aes(log(span), log(monto_adj_pesos), color = pesos), alpha = 1/5) +
+  labs(x = "\nSpan de la compra (en logs - en días)", 
+       y = "Monto de la compra\n(en logs - en pesos corrientes)\n", 
+       color = NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  # scale_x_continuous(labels = scales::number_format(scale = 1/24)) +
+  ggthemes::theme_economist() +
+  theme(axis.title = element_text(face = "bold"),
+        legend.position = "bottom")
 ```
 
-
+```{r fig.align='center', fig.cap="Distribución del logaritmo del tiempo que requiró concluir la compra (span) según  la misma tuvo o no apertura electrónica."}
+compras %>% 
+  filter(!is.na(apel)) %>% 
+  mutate(span = (fecha_compra %--% fecha_pub_adj) %/% hours(1),
+         pesos = if_else(id_moneda == 0, "Compra en pesos", "Compra en otra moneda"),
+         apel = if_else(apel == "Yes", "Sí", "No")) %>% 
+  ggplot() +
+  geom_histogram(aes(x = log(span), y = ..density.., fill = apel)) +
+  facet_wrap(~apel) +
+  labs(x = "Span de la compra (en logs - en días)", y = "Proporción", fill = "Apertura\nElectrónica") +
+  # guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  # scale_x_continuous(labels = scales::number_format(scale = 1/24)) +
+  ggthemes::theme_economist() +
+  theme(axis.title = element_text(face = "bold"),
+        legend.position = "bottom",
+        strip.text = element_blank())
+```
 
