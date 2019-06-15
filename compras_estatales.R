@@ -6,6 +6,7 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 library(rvest)
+library(magrittr)
 
 #### PARSERS METADATA ####
 
@@ -440,6 +441,20 @@ compras <- compras %>%
           id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id),
           id_tipo_compra = factor(id_tipo_compra, levels = tipos_compra$id),
           subtipo_compra = as.factor(subtipo_compra))
+
+# Quita compras con montos cero o negativos
+compras <- filter(compras, monto_adj > 0)
+tipo_de_cambio <- readxl::read_xls("Csv/ReporteTasasDeCambio_11-10-18.xls", sheet = 1)
+tipo_de_cambio <- rename(tipo_de_cambio,
+                         id_moneda = `Cód. Moneda`,
+                         moneda = Moneda,
+                         fecha = `Fecha Tasa`,
+                         tasa = `Tasa de Cambio`) %>% 
+   mutate(fecha = lubridate::date(fecha),
+          id_moneda = as.factor(id_moneda))
+compras <- left_join(compras, select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
+   mutate(tasa = if_else(id_moneda == 0, 1, tasa),
+          monto_adj = monto_adj * tasa)
 write_rds(compras, path = "Csv/compras.rds")
 
 # Variable classes
