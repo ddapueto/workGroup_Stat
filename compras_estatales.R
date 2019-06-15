@@ -425,8 +425,7 @@ tipo_de_cambio <- readxl::read_xls("Csv/ReporteTasasDeCambio_11-10-18.xls", shee
 # Codifica las variables
 # Convierte monedas
 # Quita compras con montos cero o negativos
-compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd"))
-compras %>% 
+compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd")) %>% 
    left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
    left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
    left_join(select(monedas, id_moneda, desc_moneda), by = c("id_moneda_monto_adj" = "id_moneda")) %>% 
@@ -469,10 +468,13 @@ write_rds(compras, path = "Csv/compras.rds")
 #    count(classes)
 
 # adjudicaciones -> detalle de la compra (de la factura)
-adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv")
-adjudicaciones <- adjudicaciones %>% 
-   mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda),
-          id_unidad = factor(id_unidad, levels = unidades_ejecutoras$id_ue, labels = unidades_ejecutoras$nom_ue)) %>% 
+adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv") %>% 
+   left_join(select(monedas, id_moneda, desc_moneda), by = "id_moneda") %>% 
+   left_join(select(compras, fecha_compra, id_compra), by = "id_compra") %>% 
+   mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda)) %>% 
+   left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
+   mutate(tasa = if_else(id_moneda == 0, 1, tasa),
+          monto_adj_pesos = precio_tot_imp * tasa) %>% 
    select(-X1)
 write_rds(adjudicaciones, path = "Csv/adjudicaciones.rds")
 
