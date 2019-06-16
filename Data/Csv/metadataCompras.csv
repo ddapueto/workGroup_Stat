@@ -1,0 +1,22 @@
+Atributo,Tipo ,Descripcion
+apel,char(1),Indica si es con Apertura Electrónica o no ('S' o 'N')
+arch_adj,varchar(200),Archivo correspondiente a la adjudicación
+es_reiteracion,char(1),Indica si es reiteración o no ('S' o 'N')
+estado_compra,int,Estado de la compra
+fecha_compra,date,Fecha de compra
+fecha_pub_adj,date,Fecha y hora de publicación de la adjudicación
+fondos_rotatorios,char(1),Indica si es por fondos rotatorios ('S' o 'N')
+id_compra,varchar(9),Identificador de la compra
+id_inciso,int(2),Identificador del Inciso
+id_moneda_monto_adj,int(2),Identificador de la moneda en la Compra
+id_tipo_resol,int(3),Identificador del tipo de Resolución
+id_tipocompra,char(2),Tipo de compra
+id_ue,int(3),Identificador de la UE
+monto_adj,"float(15,2)",Monto de la adjudicación
+nro_ampliacion,int,Número de ampliación
+num_compra,varchar(50),Número de la compra
+num_resol,int(9),Número de resolución
+objeto,varchar(200),Descripción del objeto de la compra
+subtipo_compra,char(3),El subtipo de la compra
+arch_reiteracion,varchar(200),Archivo de reiteración
+id_ucc,int(2),Identificador de la UCC
