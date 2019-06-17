@@ -455,7 +455,9 @@ compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = 
           id_tipo_compra = factor(id_tipo_compra, levels = tipos_compra$id),
           subtipo_compra = as.factor(subtipo_compra)) %>% 
    left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
+   arrange(id_moneda, fecha_compra) %>%
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
+          tasa = na.locf(tasa),
           monto_adj_pesos = monto_adj * tasa) %>% 
    filter(monto_adj > 0, fecha_compra > "2018-01-01")
 write_rds(compras, path = "Data/rds/compras.rds")
@@ -483,6 +485,8 @@ oferentes <- readr::read_csv("Csv/comprasEstatalesOferantesrefactor.csv")
 oferentes <- oferentes %>% 
    select(-X1)
 write_rds(oferentes, path = "Csv/oferentes.rds")
+
+
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
