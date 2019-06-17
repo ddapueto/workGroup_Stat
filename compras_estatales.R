@@ -426,30 +426,29 @@ tipo_de_cambio <- readxl::read_xls("Data/Csv/ReporteTasasDeCambio_11-10-18.xls",
 # Convierte monedas
 # Quita compras con montos cero o negativos
 # Filtra compras anteriores a 2017
-compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd")) %>% 
-   left_join(estados_compra, by = c("estado_compra" = "id_estado_compra")) %>% 
+#compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = c("dcccdccccdddcdddcdcccd")) %>% 
+compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = cols(id_ucc = col_integer())) %>%
+   left_join(estados_compra, by = c("id_estado_compra" = "id_estado_compra")) %>% 
    left_join(incisos, by = c("id_inciso" = "inciso")) %>% 
-   left_join(select(monedas, id_moneda, desc_moneda), by = c("id_moneda_monto_adj" = "id_moneda")) %>% 
-   left_join(select(tipos_compra, id, descripcion), by = c("id_tipocompra" = "id")) %>% 
+   left_join(select(monedas, id_moneda, desc_moneda), by = c("id_moneda" = "id_moneda")) %>% 
+   left_join(select(tipos_compra, id, descripcion), by = c("id_tipo_compra" = "id")) %>% 
    left_join(unidades_ejecutoras, by = c("id_inciso" = "id_inciso", "id_ue" = "id_ue")) %>% 
    left_join(rename(tipos_resolucion, tipo_resol = descripcion), by = c("id_tipo_resol" = "id")) %>% 
-   rename(id_estado_compra = estado_compra,
-          id_moneda = id_moneda_monto_adj,
-          estado_compra = descripcion.x,
+   rename(estado_compra = descripcion.x,
           inciso = nom_inciso,
           moneda = desc_moneda,
-          id_tipo_compra = id_tipocompra,
           tipo_compra = descripcion.y,
           ue = nom_ue) %>% 
    select(-X1, apel, arch_adj, es_reiteracion, id_estado_compra, estado_compra, starts_with("fecha"), fondos_rotatorios, 
           id_compra, id_inciso, inciso, id_ue, ue, id_moneda, moneda, num_resol, id_tipo_resol, tipo_resol, 
           id_tipo_compra, tipo_compra, everything()) %>% 
-   mutate(apel = fct_recode(apel, "No" = "N", "Yes" = "S"),
-          es_reiteracion = fct_recode(es_reiteracion, "No" = "N", "Yes" = "S"),
+   #replace_na(list(apel = "unknown")) %>%
+   mutate(apel = fct_recode(apel, "N" = "No" , "S" = "Yes"),
+          es_reiteracion = fct_recode(es_reiteracion, "N" = "No" , "S" = "Yes"),
           id_estado_compra = factor(id_estado_compra, levels = estados_compra$id_estado_compra),
-          fecha_compra = lubridate::dmy(fecha_compra),
-          fecha_pub_adj = lubridate::dmy_hm(fecha_pub_adj),
-          fondos_rotatorios = fct_recode(fondos_rotatorios, "No" = "N", "Yes" = "S"),
+          fecha_compra = lubridate::ymd(fecha_compra),
+          fecha_pub_adj = lubridate::ymd_hms(fecha_pub_adj),
+          fondos_rotatorios = fct_recode(fondos_rotatorios, "N" = "No" , "S" = "Yes"),
           id_inciso = factor(id_inciso, levels = incisos$inciso),
           id_moneda = factor(id_moneda, levels = monedas$id_moneda),
           id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id),
@@ -459,7 +458,7 @@ compras <- readr::read_csv("Csv/comprasEstatalesrefactor.csv", col_types = c("dc
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
           monto_adj_pesos = monto_adj * tasa) %>% 
    filter(monto_adj > 0, fecha_compra > "2018-01-01")
-write_rds(compras, path = "Csv/compras.rds")
+write_rds(compras, path = "Data/rds/compras.rds")
 
 # Variable classes
 # tibble(variables = names(sapply(compras, class))
