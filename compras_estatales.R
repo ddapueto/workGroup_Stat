@@ -26,7 +26,7 @@ estados_compra <- read_lines(url_estados_compras, locale = locale(encoding = "La
    mutate(id_estado_compra = as.numeric(str_replace_all(string = id_estado_compra, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "(^descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(descripcion))
-write_rds(estados_compra, path = "Csv/meta_estado_de_compra.rds")
+write_rds(estados_compra, path = "Data/rds/meta_estado_compra.rds")
 
 ## Estados proveedor ##
 url_estados_proveedor <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteEstadosProveedor.do"
@@ -46,7 +46,7 @@ estados_proveedor <- read_lines(url_estados_proveedor, locale = locale(encoding 
           val_adjs = str_replace(string = val_adjs, pattern = "^.*(S|N).*$", replacement = "\\1"),
           val_amps = str_replace(string = val_amps, pattern = "^.*(S|N).*$", replacement = "\\1")) %>% 
    filter(!is.na(desc_estado))
-write_rds(estados_proveedor, path = "Csv/meta_estado_proveedor.rds")
+write_rds(estados_proveedor, path = "Data/rds/meta_estado_proveedor.rds")
 
 ## Incisos ##
 url_incisos <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteIncisos.do"
@@ -64,7 +64,7 @@ incisos <- read_lines(url_incisos, locale = locale(encoding = "Latin1"))[3] %>%
    mutate(inciso = as.numeric(str_replace_all(string = inciso, pattern = "[^0-9]", replacement = "")),
           nom_inciso = str_replace_all(string = nom_inciso, pattern = "^(nom-inciso=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(nom_inciso))
-write_rds(incisos, path = "Csv/meta_id_inciso.rds")
+write_rds(incisos, path = "Data/rds/meta_id_inciso.rds")
 
 ## Monedas ##
 url_monedas <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteMonedas.do"
@@ -84,7 +84,7 @@ monedas <- read_lines(url_monedas, locale = locale(encoding = "Latin1"))[3] %>%
           sigla_moneda = str_replace_all(string = sigla_moneda, pattern = "(^sigla-moneda=\")|(\")", replacement = ""),
           id_moneda_arbitraje = as.numeric(str_replace_all(string = id_moneda_arbitraje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_moneda))
-write_rds(monedas, path = "Csv/meta_monedas.rds")
+write_rds(monedas, path = "Data/rds/meta_id_moneda.rds")
 
 ## Objetos gasto ##
 url_objetos_gasto <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteObjetosGasto.do"
@@ -102,7 +102,7 @@ objetos_gastos <- read_lines(url_objetos_gasto, locale = locale(encoding = "Lati
    mutate(odg = as.numeric(str_replace_all(string = odg, pattern = "[^0-9]", replacement = "")),
           descripcion = str_to_title(str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)$", replacement = ""))) %>% 
    filter(!is.na(odg))
-write_rds(objetos_gastos, path = "Csv/meta_objetos_gastos.rds")
+write_rds(objetos_gastos, path = "Data/rds/meta_objetos_gastos.rds")
 
 ## Porcentaje suprograma PCPD ##
 url_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reportePorcentajesSubprogramasPCPD.do"
@@ -121,7 +121,7 @@ porcentaje_subprograma_pcpd <- read_lines(url_pcpd, locale = locale(encoding = "
           fecha_vigencia = lubridate::dmy(str_replace_all(string = fecha_vigencia, pattern = "^(fecha-vigencia=\")|(\")", replacement = "")),
           porcentaje = as.numeric(str_replace_all(string = porcentaje, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(codigo_subprograma))
-write_rds(porcentaje_subprograma_pcpd, path = "Csv/meta_porcentaje_subprograma_pcpd.rds")
+write_rds(porcentaje_subprograma_pcpd, path = "Data/rds/meta_porcentaje_subprograma_pcpd.rds")
 
 ## Suprogramas PCPD ##
 url_subprogramas_pcpd <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubprogramasPCPD.do"
@@ -141,7 +141,7 @@ subprogramas_pcpd <- read_lines(url_subprogramas_pcpd, locale = locale(encoding 
           fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\")", replacement = "")),
           fecha_hasta = str_replace_all(string = fecha_hasta, pattern = "^(fecha-hasta=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(codigo))
-write_rds(subprogramas_pcpd, path = "Csv/meta_subprogramas_pcpd.rds")
+write_rds(subprogramas_pcpd, path = "Data/rds/meta_subprogramas_pcpd.rds")
 
 ## Subtipos compra (falta codificar correctamente condicion precios oferta - revisar en caso de usar -) ##
 url_subtipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteSubTiposCompra.do"
@@ -174,7 +174,7 @@ subtipos_compras <- read_lines(url_subtipos_compra, locale = locale(encoding = "
           pub_adj = str_replace_all(string = pub_adj, pattern = "^(pub-adj=\")|(\")$", replacement = ""),
           cant_adj = str_replace_all(string = cant_adj, pattern = "^(cant-adj=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(id_tipocompra))
-write_rds(subtipos_compras, path = "Csv/meta_subtipos_compras.rds")
+write_rds(subtipos_compras, path = "Data/rds/meta_subtipos_compra.rds")
 
 ## Tipos de ajustes de adjuudiicacion ##
 url_tipos_ajustes_adj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposAjusteAdj.do"
@@ -201,7 +201,7 @@ tipos_ajustes_adj <- read_lines(url_tipos_ajustes_adj, locale = locale(encoding 
           modif_item_adj = str_replace_all(string = modif_item_adj, pattern = "^(modif-item-adj=\")|(\")$", replacement = ""),
           nuevo_item_adj = str_replace_all(string = nuevo_item_adj, pattern = "^(nuevo-item-adj=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(id))
-write_rds(tipos_ajustes_adj, path = "Csv/meta_tipos_ajustes_adj.rds")
+write_rds(tipos_ajustes_adj, path = "Data/rds/meta_tipos_ajustes_adj.rds")
 
 ## Tipos de compra ##
 url_tipos_compra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposCompra.do"
@@ -236,7 +236,7 @@ tipos_compra <- read_lines(url_tipos_compra, locale = locale(encoding = "Latin1"
           tope_legal = str_replace_all(string = tope_legal, pattern = "^(tope-legal=\")|(\")$", replacement = ""),
           pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(descripcion))
-write_rds(tipos_compra, path = "Csv/meta_tipos_compra.rds")
+write_rds(tipos_compra, path = "Data/rds/meta_id_tipocompra.rds")
 
 ## Tipo de documentos de proveedor ##
 url_tipos_doc_proveedor <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposDocumento.do"
@@ -256,7 +256,7 @@ tipos_doc_proveedor <- read_lines(url_tipos_doc_proveedor, locale = locale(encod
           prov_rupe = str_replace_all(string = prov_rupe, pattern = "^(prov-rupe=\")|(\")", replacement = ""),
           pcpd = str_replace_all(string = pcpd, pattern = "^(pcpd=\")|(\"\\s/>)$", replacement = "")) %>% 
    filter(!is.na(descripcion))
-write_rds(tipos_doc_proveedor, path = "Csv/meta_tipos_doc_proveedor.rds")
+write_rds(tipos_doc_proveedor, path = "Data/rds/meta_tipo_doc_prov.rds")
 
 ## Tipos de resolucion ##
 url_tipos_resolucion <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucion.do"
@@ -274,7 +274,7 @@ tipos_resolucion <- read_lines(url_tipos_resolucion, locale = locale(encoding = 
    mutate(id = as.numeric(str_replace_all(string = id, pattern = "[^0-9]", replacement = "")),
           descripcion = str_replace_all(string = descripcion, pattern = "^(descripcion=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(id))
-write_rds(tipos_resolucion, path = "Csv/meta_tipos_resolucion.rds")
+write_rds(tipos_resolucion, path = "Data/rds/meta_id_tipo_resol.rds")
 
 ## Tipos resolucion tipo adjudicacion adjustes ##
 url_tipos_resolucion_tipoajusteadj <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucionTipoAjusteAdj.do"
@@ -292,7 +292,7 @@ tipos_resolucion_tipoajusteadj <- read_lines(url_tipos_resolucion_tipoajusteadj,
    mutate(id_tipoajusteadj = as.numeric(str_replace_all(string = id_tipoajusteadj, pattern = "[^0-9]", replacement = "")),
           id_tiporesol = as.numeric(str_replace_all(string = id_tiporesol, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_tipoajusteadj))
-write_rds(tipos_resolucion_tipoajusteadj, path = "Csv/meta_tipos_resolucion_tipoajusteadj.rds")
+write_rds(tipos_resolucion_tipoajusteadj, path = "Data/rds/meta_tipos_resolucion_tipoajusteadj.rds")
 
 ## Tipos resolucion tipo compra ##
 url_tipos_resolucion_tipocompra <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTiposResolucionCompra.do"
@@ -310,7 +310,7 @@ tipos_resolucion_tipocompra <- read_lines(url_tipos_resolucion_tipoajusteadj, lo
    mutate(id_tipo_resolucion = as.numeric(str_replace_all(string = id_tipo_resolucion, pattern = "[^0-9]", replacement = "")),
           id_tipo_compra = as.numeric(str_replace_all(string = id_tipo_compra, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(id_tipo_resolucion))
-write_rds(tipos_resolucion_tipocompra, path = "Csv/meta_tipos_resolucion_tipocompra.rds")
+write_rds(tipos_resolucion_tipocompra, path = "Data/rds/meta_tipos_resolucion_tipocompra.rds")
 
 ## Topes legales ##
 url_topes_legales <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteTopesLegales.do"
@@ -330,7 +330,7 @@ topes_legales <- read_lines(url_topes_legales, locale = locale(encoding = "Latin
           comun = as.numeric(str_replace_all(string = comun, pattern = "^(comun=\")|(\")", replacement = "")),
           ampliado = as.numeric(str_replace_all(string = ampliado, pattern = "[^0-9]", replacement = ""))) %>% 
    filter(!is.na(fecha_desde))
-write_rds(topes_legales, path = "Csv/meta_topes_legales.rds")
+write_rds(topes_legales, path = "Data/rds/meta_topes_legales.rds")
 
 ## Unidades de compra centralizadas ##
 url_unidades_compra_centralizada <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUCCs.do"
@@ -348,7 +348,7 @@ unidades_compra_centralizada <- read_lines(url_unidades_compra_centralizada, loc
    mutate(id_ucc = as.numeric(str_replace_all(string = id_ucc, pattern = "[^0-9]", replacement = "")),
           nom_ucc = str_replace_all(string = nom_ucc, pattern = "^(nom-ucc=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(nom_ucc))
-write_rds(unidades_compra_centralizada, path = "Csv/meta_unidades_compra_centralizada.rds")
+write_rds(unidades_compra_centralizada, path = "Data/rds/meta_id_ucc.rds")
 
 ## Unidades ejecutoras ##
 url_unidades_ejecutoras <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUnidadesEjecutoras.do"
@@ -367,7 +367,7 @@ unidades_ejecutoras <- read_lines(url_unidades_ejecutoras, locale = locale(encod
           id_ue = as.numeric(str_replace_all(string = id_ue, pattern = "[^0-9]", replacement = "")),
           nom_ue = str_replace_all(string = nom_ue, pattern = "^(nom-ue=\")|(\"\\s/>)", replacement = "")) %>% 
    filter(!is.na(id_ue))
-write_rds(unidades_ejecutoras, path = "Csv/meta_unidades_ejecutoras.rds")
+write_rds(unidades_ejecutoras, path = "Data/rds/meta_id_ue.rds")
 
 ## Unidades ejecutoras tope ampliado ##
 url_ues_topes_ampliados <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUETopesAmpliados.do"
@@ -386,7 +386,7 @@ ues_topes_ampliados <- read_lines(url_ues_topes_ampliados, locale = locale(encod
           id_ue = as.numeric(str_replace_all(string = id_ue, pattern = "[^0-9]", replacement = "")),
           fecha_desde = lubridate::dmy(str_replace_all(string = fecha_desde, pattern = "^(fecha-desde=\")|(\"\\s/>)", replacement = ""))) %>% 
    filter(!is.na(id_ue))
-write_rds(ues_topes_ampliados, path = "Csv/meta_ues_topes_ampliados.rds")
+write_rds(ues_topes_ampliados, path = "Data/rds/meta_ues_topes_ampliados.rds")
 
 ## Unidades de medida ##
 url_unidades_medida <- "https://www.comprasestatales.gub.uy/comprasenlinea/jboss/reporteUnidadesMedida.do"
@@ -408,7 +408,7 @@ unidades_medida <- read_lines(url_unidades_medida, locale = locale(encoding = "L
           fecha_baja = lubridate::dmy(str_replace_all(string = fecha_baja, pattern = "^(fecha-baja=\")|(\")", replacement = "")),
           motivo_baja = str_replace_all(string = motivo_baja, pattern = "^(motivo-baja=\")|(\"\\s/>)$|(\\s/>)$", replacement = "")) %>% 
    filter(!is.na(cod))
-write_rds(unidades_medida, path = "Csv/meta_unidades_medida.rds")
+write_rds(unidades_medida, path = "Data/rds/meta_id_unidad.rds")
 
 # Tasas de cambio
 tipo_de_cambio <- readxl::read_xls("Csv/ReporteTasasDeCambio_11-10-18.xls", sheet = 1) %>% 
