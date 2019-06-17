@@ -411,12 +411,12 @@ unidades_medida <- read_lines(url_unidades_medida, locale = locale(encoding = "L
 write_rds(unidades_medida, path = "Data/rds/meta_id_unidad.rds")
 
 # Tasas de cambio
-tipo_de_cambio <- readxl::read_xls("Csv/ReporteTasasDeCambio_11-10-18.xls", sheet = 1) %>% 
-   rename(id_moneda = `Cód. Moneda`,
+tipo_de_cambio <- readxl::read_xls("Data/Csv/ReporteTasasDeCambio_11-10-18.xls", sheet = 1) %>% 
+   rename(id_moneda = `Cod.moneda`,
           moneda = Moneda,
           fecha = `Fecha Tasa`,
           tasa = `Tasa de Cambio`) %>% 
-   mutate(fecha = lubridate::date(fecha),
+   mutate(fecha = lubridate::dmy(fecha),
           id_moneda = as.factor(id_moneda))
 
 ## Base de compras ##
