@@ -442,13 +442,11 @@ compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = 
    select(-X1, apel, arch_adj, es_reiteracion, id_estado_compra, estado_compra, starts_with("fecha"), fondos_rotatorios, 
           id_compra, id_inciso, inciso, id_ue, ue, id_moneda, moneda, num_resol, id_tipo_resol, tipo_resol, 
           id_tipo_compra, tipo_compra, everything()) %>% 
-   #replace_na(list(apel = "unknown")) %>%
-   mutate(apel = fct_recode(apel, "N" = "No" , "S" = "Yes"),
-          es_reiteracion = fct_recode(es_reiteracion, "N" = "No" , "S" = "Yes"),
+   mutate(es_reiteracion = fct_recode(es_reiteracion, "N" = "No", "S" = "Yes"),
           id_estado_compra = factor(id_estado_compra, levels = estados_compra$id_estado_compra),
           fecha_compra = lubridate::ymd(fecha_compra),
           fecha_pub_adj = lubridate::ymd_hms(fecha_pub_adj),
-          fondos_rotatorios = fct_recode(fondos_rotatorios, "N" = "No" , "S" = "Yes"),
+          fondos_rotatorios = fct_recode(fondos_rotatorios, "N" = "No", "S" = "Yes"),
           id_inciso = factor(id_inciso, levels = incisos$inciso),
           id_moneda = factor(id_moneda, levels = monedas$id_moneda),
           id_tipo_resol = factor(id_tipo_resol, levels = tipos_resolucion$id),
@@ -456,13 +454,24 @@ compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = 
           subtipo_compra = as.factor(subtipo_compra)) %>% 
    left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
    arrange(id_moneda, fecha_compra) %>%
-   # filter(id_moneda != 0) %>% 
-   # select(fecha_compra, id_moneda, tasa)
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
           tasa = zoo::na.locf(tasa),
           monto_adj_pesos = monto_adj * tasa) %>% 
    filter(monto_adj > 0, fecha_compra > "2018-01-01")
 write_rds(compras, path = "Data/rds/compras.rds")
+
+compras %>% 
+   select(fecha_compra, id_moneda, tasa) %>% 
+   distinct(fecha_compra, id_moneda, tasa) %>% 
+   mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda)) %>% 
+   ggplot() +
+   geom_line(aes(fecha_compra, tasa, color = id_moneda), show.legend = FALSE) +
+   facet_wrap(~id_moneda, scales = "free_y") +
+   labs(x = NULL, y = "Tipo de cambio") +
+   ggthemes::theme_economist() +
+   theme(axis.title = element_text(face = "bold"),
+         strip.text = element_text(face = "bold"),
+         strip.background = element_rect(fill = "white", linetype = "solid"))
 
 # Variable classes
 # tibble(variables = names(sapply(compras, class))
@@ -482,10 +491,8 @@ adjudicaciones <- readr::read_csv("Data/Csv/comprasEstatalesAdjudicacionesrefact
 write_rds(adjudicaciones, path = "Data/rds/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
-oferentes <- readr::read_csv("Data/Csv/comprasEstatalesOferantesrefactor.csv")
+oferentes <- readr::read_csv("Data/Csv/comprasEstatalesOferentesrefactor.csv")
 write_rds(oferentes, path = "Data/rds/oferentes.rds")
-
-
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
