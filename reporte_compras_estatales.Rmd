@@ -29,9 +29,9 @@ library(magrittr)
 ```
 
 ```{r}
-compras <- readr::read_rds("Csv/compras.rds")
-adjudicaciones <- readr::read_rds("Csv/adjudicaciones.rds")
-oferentes <- readr::read_rds("Csv/oferentes.rds")
+compras <- readr::read_rds("Data/rds/compras.rds")
+adjudicaciones <- readr::read_rds("Data/rds//adjudicaciones.rds")
+oferentes <- readr::read_rds("Data/rds//oferentes.rds")
 ```
 
 # Análisis oferentes {.tabset .tabset-fade .tabset-pills}
