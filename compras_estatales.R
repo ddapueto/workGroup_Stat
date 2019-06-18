@@ -470,21 +470,18 @@ write_rds(compras, path = "Data/rds/compras.rds")
 #    count(classes)
 
 # adjudicaciones -> detalle de la compra (de la factura)
-adjudicaciones <- readr::read_csv("Csv/comprasEstatalesAdjudicacionesrefactor.csv") %>% 
+adjudicaciones <- readr::read_csv("Data/Csv/comprasEstatalesAdjudicacionesrefactor.csv") %>% 
    left_join(select(monedas, id_moneda, desc_moneda), by = "id_moneda") %>% 
    left_join(select(compras, fecha_compra, id_compra), by = "id_compra") %>% 
    mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda)) %>% 
    left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
-          monto_adj_pesos = precio_tot_imp * tasa) %>% 
-   select(-X1)
-write_rds(adjudicaciones, path = "Csv/adjudicaciones.rds")
+          monto_adj_pesos = precio_tot_imp * tasa)
+write_rds(adjudicaciones, path = "Data/rds/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
-oferentes <- readr::read_csv("Csv/comprasEstatalesOferantesrefactor.csv")
-oferentes <- oferentes %>% 
-   select(-X1)
-write_rds(oferentes, path = "Csv/oferentes.rds")
+oferentes <- readr::read_csv("Data/Csv/comprasEstatalesOferantesrefactor.csv")
+write_rds(oferentes, path = "Data/rds/oferentes.rds")
 
 
 
