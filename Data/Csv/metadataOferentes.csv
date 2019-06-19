@@ -1,0 +1,6 @@
+Atributo,Tipo ,Descripcion
+id_compra,varchar(9),Identificador de la compra
+key_id,int,categorizacion de cada oferente por compra
+nombre_comercial,varchar(255),Nombre comercial del proveedor
+nro_doc_prov,varchar(12),Número de documento del proveedor
+tipo_doc_prov,char(1),Tipo de documento del proveedor
