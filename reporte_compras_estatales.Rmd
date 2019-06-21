@@ -53,20 +53,47 @@ compras_week <- compras %>%
            ) %>%
   rename(week_date = `floor_date(fecha_compra, "week")`)
 
+#total compras
+cto_compras <- compras %>% 
+                  count(id_compra) %>% 
+                  dim() %>% 
+                  .[1]
+#total gastado en pesos uruguayos
+monto_total <- sum(compras$monto_adj_pesos)
+
+
+
+
+
 ```
 
 # Introduccion {.tabset .tabset-fade .tabset-pills}
 
 
- Se realiza un investigacion sobre las adjudicaciones realizadas por el Estado y todos sus entes vinculados. Pudiendo observar todos los tipos de compras como tambien que productos son los que se compraron y quienes son los principales vendedores.
+ Se realiza un investigacion sobre las adjudicaciones realizadas por el Estado y todos sus entes vinculados. Pudiendo observar todos los tipos de compras como tambien que productos son los que se compraron y quienes son los principales vendedores.  
  
  
  
- Esta investigacion se origina realizando una [web-scrapping][1][^1] donde se extrajo los datos y luego se realiza una limpieza de todo lo extraible [script][2], teniendo 3 base de datos ( compras,  adjudicaciones y oferentes)
+ Esta investigacion se origina realizando una [web-scrapping][1][^1] donde se extrajo los datos y luego se realiza una limpieza de todo lo extraible [script][2], teniendo 3 base de datos ( compras,  adjudicaciones y oferentes)  
+ 
+ 
+
+
 
 # Analisis Exploratorio
 
 ## Compras
+
+Como datos generales podemos observar que hubo dentro del periodo de investigacion unas `r cto_compras` compras adjudicadas que alcancaza `r monto_total / 1000000` millones de pesos uruguayos . Hay que tener en cuenta como se dijo antes , que estosson datos aproximados dado que no todos los entes publicos han ingresado su gastos com por ejemplo la intendencia de Rocha donde no encontramos ninguna adjudicacion.  
+
+
+Esta claro que el proceso que se esta transitando con respecto al [decreto][3] es costoso dado los cambios de metodologia de trabajo de los entes publicos y por lo tanto no se esta obteniendo toda la informacion adecuada.  
+
+
+Uno de los primero graaficos que crremos es muy importante de visualizar es un grafico lineal que nos brainda una serie de tiempo en base al monto gastado en pesos uruguayos.  
+
+
+
 
 
 ```{r,fig.align='center', fig.cap="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)"}
@@ -78,12 +105,18 @@ ggplotly(ggplot(compras_week) +
   theme(axis.title = element_text(face = "bold")) +
   geom_point(data = compras_week %>% dplyr::filter(is_outlier == TRUE), aes(week_date, total_comprado), color = 'red', size = 5, alpha = 0.5)+
   geom_point(data = compras_week %>% dplyr::filter(is_low == 1), aes(week_date, total_comprado), color = 'blue', size = 2) +
-  geom_point(data = compras_week %>% dplyr::filter(is_high == 1), aes(week_date, total_comprado), color = 'darkred', size = 2))
+  geom_point(data = compras_week %>% dplyr::filter(is_high == 1), aes(week_date, total_comprado), color = 'darkred', size = 2)) %>%
+  layout(width=850)
 ```
 
+Como se puede ver vemos algunos picos u anomalias (marcados con puntos rojos grandes) que nos denotan que en ese periodo fue el mayor gasto del pais en compras.  
+Muy importante avisar que se evalua en un periodo de tiempo semanal desde Enero 2018 hasta Abril 2019.  
+La semana donde hay mas gasto adjudicado es en `r compras_week %>% arrange(desc(total_comprado)) %>% head(1) %>% select(week_date)`.  
 
 
-```{r, fig.align='center', fig.cap="Evolución de la cantidad de adjudicaciones mensuales"}
+
+
+```{r, fig.align='left', fig.cap="Evolución de la cantidad de adjudicaciones mensuales"}
 compras %>% 
   filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
   group_by(floor_date(fecha_compra, "week")) %>% 
@@ -238,3 +271,5 @@ oferentes %>%
 
 [1]: https://github.com/ddapueto/workGroup_Stat/blob/master/xmlParsePython/Parse_compras_estatales.py "Github code"
 [2]: https://github.com/ddapueto/workGroup_Stat/blob/master/compras_estatales.R "Github code"
+
+[3]: https://www.agesic.gub.uy/innovaportal/file/6176/1/resolucion_005_2016.pdf "Decreto datos abiertos"
