@@ -197,7 +197,6 @@ compras %>%
 
 
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes por la intendencia de Montevideo\n(en millones de pesos corrientes)"}
-# Falta tasas de cambio
 compras %>%
   filter (id_inciso==98) %>%
   filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
@@ -279,6 +278,37 @@ oferentes %>%
         col.names = c("Proveedor", "ID", "Cantidad", "Proporción")) %>%
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
+```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes por las intendencias del país\n(en millones de pesos corrientes)"}
+compras %>%
+  filter(grepl("Intendencia", inciso)==TRUE) %>%
+  mutate(zona_pais=ifelse(grepl("Montevideo", inciso)==1,
+                          "Montevideo", "Interior"))  %>%
+  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
+  group_by(floor_date(fecha_compra, "month"), zona_pais) %>% 
+  summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>%
+  ggplot(aes(x=`floor_date(fecha_compra, "month")`, y=total_comprado, fill=zona_pais)) +
+  geom_bar(stat="identity", position="dodge") +
+  labs(x = NULL, y = "Monto total adjudicado por mes\n(equivalente en millones de pesos corrientes)\n") +
+  scale_fill_discrete(name="Zona del país", palette=) +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
+  ggthemes::theme_economist() +
+  theme(axis.title = element_text(face = "bold"))
+
+adj_julio_interior <- compras %>%
+  filter(grepl("Intendencia", inciso)==TRUE) %>%
+  mutate(zona_pais=ifelse(grepl("Montevideo", inciso)==1,
+                          "Montevideo", "Interior"))  %>%
+  filter("2018-07-01" < fecha_compra, fecha_compra < "2018-07-31") %>% 
+  arrange(desc(monto_adj_pesos)) %>% select(objeto, monto_adj_pesos) %>% head(n=1) 
+
+```
+
+Se observa que durante la mayor parte del año, el monto adjudicado por la Intendencia de Montevideo es mayor que el del resto de todas las intendencias de todo el país.
+
+Esto no es cierto en los meses febrero, marzo, y abril, en los cuales el gasto realizado por las intendencias del interior es ligeramente mayor al de la de Montevideo; y en Julio, mes en el que se da el mayor monto de adjudicación de todos, el cual es notablemente superior al resto.
+
+Dicha adjudicación figura en la base como _`r adj_julio_interior[,1]`_ y tuvo un monto de $U`r prettyNum(adj_julio_interior[,2]/1e6, big.mark = ".", decimal.mark = ",", digits=0)` millones.
+
 
 
 
@@ -288,4 +318,3 @@ oferentes %>%
 [1]: https://github.com/ddapueto/workGroup_Stat/blob/master/xmlParsePython/Parse_compras_estatales.py "Github code"
 [2]: https://github.com/ddapueto/workGroup_Stat/blob/master/compras_estatales.R "Github code"
 
-[3]: https://www.agesic.gub.uy/innovaportal/file/6176/1/resolucion_005_2016.pdf "Decreto datos abiertos"
