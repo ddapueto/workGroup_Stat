@@ -14,7 +14,7 @@ output:
       smooth_scroll: true
     theme: united
     highlight: tango
-    fig_caption: true
+    fig_caption: yes
     code_folding: hide
     includes:
       in_header: header.html
@@ -44,14 +44,30 @@ oferentes <- readr::read_rds("Data/rds/oferentes.rds")
 compras_week <- compras %>% 
   filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>%
   group_by(floor_date(fecha_compra, "week")) %>% 
-  summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>% 
-  mutate(is_low = ifelse(total_comprado <= quantile(total_comprado,probs=0.05), 1, NA), 
-         is_high = ifelse(total_comprado >= quantile(total_comprado,probs=0.95), 1, NA), 
-         is_outlier = case_when(
+  summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE) ,
+            cantidad_comprado = n(),
+            monto_promedio_por_semana = total_comprado/cantidad_comprado) %>% 
+  mutate(is_low_monto = ifelse(total_comprado <= quantile(total_comprado,probs=0.05), 1, NA), 
+         is_high_monto = ifelse(total_comprado >= quantile(total_comprado,probs=0.95), 1, NA), 
+         is_outlier_monto = case_when(
                 total_comprado < quantile(total_comprado,probs = 0.25) - 1.5 * IQR(total_comprado) | total_comprado > quantile(total_comprado, probs = 0.75) + 1.5 * IQR(total_comprado) ~ TRUE,
                 TRUE ~ FALSE) 
            ) %>%
+  mutate(is_low_cto = ifelse(cantidad_comprado <= quantile(cantidad_comprado,probs=0.05), 1, NA), 
+         is_high_cto = ifelse(cantidad_comprado >= quantile(cantidad_comprado,probs=0.95), 1, NA), 
+         is_outlier_cto = case_when(
+                cantidad_comprado < quantile(cantidad_comprado,probs = 0.25) - 1.5 * IQR(cantidad_comprado) | cantidad_comprado > quantile(cantidad_comprado, probs = 0.75) + 1.5 * IQR(cantidad_comprado) ~ TRUE,
+                TRUE ~ FALSE) 
+           ) %>%
+  mutate(is_low_mean = ifelse(monto_promedio_por_semana <= quantile(monto_promedio_por_semana,probs=0.05), 1, NA), 
+         is_high_monto = ifelse(monto_promedio_por_semana >= quantile(monto_promedio_por_semana,probs=0.95), 1, NA), 
+         is_outlier_monto = case_when(
+                monto_promedio_por_semana < quantile(monto_promedio_por_semana,probs = 0.25) - 1.5 * IQR(monto_promedio_por_semana) | monto_promedio_por_semana > quantile(monto_promedio_por_semana, probs = 0.75) + 1.5 * IQR(monto_promedio_por_semana) ~ TRUE,
+                TRUE ~ FALSE) 
+           ) %>%
+  
   rename(week_date = `floor_date(fecha_compra, "week")`)
+
 
 #total compras
 cto_compras <- compras %>% 
@@ -103,9 +119,9 @@ ggplotly(ggplot(compras_week) +
   scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold")) +
-  geom_point(data = compras_week %>% dplyr::filter(is_outlier == TRUE), aes(week_date, total_comprado), color = 'red', size = 5, alpha = 0.5)+
-  geom_point(data = compras_week %>% dplyr::filter(is_low == 1), aes(week_date, total_comprado), color = 'blue', size = 2) +
-  geom_point(data = compras_week %>% dplyr::filter(is_high == 1), aes(week_date, total_comprado), color = 'darkred', size = 2)) %>%
+  geom_point(data = compras_week %>% dplyr::filter(is_outlier_monto == TRUE), aes(week_date, total_comprado), color = 'red', size = 5, alpha = 0.5)+
+  geom_point(data = compras_week %>% dplyr::filter(is_low_monto == 1), aes(week_date, total_comprado), color = 'blue', size = 2) +
+  geom_point(data = compras_week %>% dplyr::filter(is_high_monto == 1), aes(week_date, total_comprado), color = 'darkred', size = 2)) %>%
   layout(width=850)
 ```
 
@@ -117,16 +133,16 @@ La semana donde hay mas gasto adjudicado es en `r compras_week %>% arrange(desc(
 
 
 ```{r, fig.align='left', fig.cap="Evolución de la cantidad de adjudicaciones mensuales"}
-compras %>% 
-  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
-  group_by(floor_date(fecha_compra, "week")) %>% 
-  tally() %>% 
-  ggplot() +
-  geom_line(aes(`floor_date(fecha_compra, "week")`, n), color = "orange") +
+ggplotly(ggplot(compras_week) +
+  geom_line(aes(week_date, cantidad_comprado), color = "orange") +
   labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
-  scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
+  #scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
   ggthemes::theme_economist() +
-  theme(axis.title = element_text(face = "bold"))
+  theme(axis.title = element_text(face = "bold")) +
+  geom_point(data = compras_week %>% dplyr::filter(is_outlier_cto == TRUE), aes(week_date, cantidad_comprado), color = 'red', size = 5, alpha = 0.5)+
+  geom_point(data = compras_week %>% dplyr::filter(is_low_cto == 1), aes(week_date, cantidad_comprado), color = 'blue', size = 2) +
+  geom_point(data = compras_week %>% dplyr::filter(is_high_cto == 1), aes(week_date, cantidad_comprado), color = 'darkred', size = 2)) %>%
+  layout(width=850)
 ```
 
 ```{r, fig.align='center', fig.cap="Monto total adjudicado por semana en función de la cantidad de adjudicaciones realizadas."}
