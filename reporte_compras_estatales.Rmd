@@ -160,9 +160,7 @@ compras %>%
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
 ```
-Se puede observar que el monto total adjudicado semanalmente por la Intendencia de Montevideo se mantiene generalmente en una franja de entre 0 y 300 millones de pesos uruguayos.
-
-Existe únicamente un pico, sobre el final del año 2018, cuando se adjudicaron unos 500 millones de pesos.
+Se puede observar que el monto total adjudicado semanalmente por la Intendencia de Montevideo se mantiene generalmente en una franja de entre 0 y 300 millones de pesos uruguayos. Existe únicamente un pico, sobre el final del año 2018, cuando se adjudicaron unos 500 millones de pesos.
 
 
 ```{r, fig.align='center', fig.cap="Evolución del monto total adjudicado por mes por las intendencias del país\n(en millones de pesos corrientes)"}
