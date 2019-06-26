@@ -3,7 +3,7 @@ title: "Compras Estatales"
 author: 
 - "Daniel Czarnievicz" 
 - "Damian Dapueto"
-- "Emanuelle"
+- "Emanuelle Marsella"
 date: "Última actualización: `r format(Sys.time(), '%A %d %B, %Y, %I:%M %p')`"
 output: 
   html_document:
@@ -364,6 +364,33 @@ oferentes %>%
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
 
+A continuación, nos interesa ver si aquellos proveedores que son predominantes a la hora de adjudicarse compras a lo largo del año, también lo son mensualmente de forma sostenida.
+
+```{r}
+inner_join(oferentes, compras, by="id_compra") %>%
+  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%   group_by(nombre_comercial, floor_date(fecha_compra, "month")) %>%
+  summarise(n_compras = n_distinct(id_compra)) %>%
+  mutate(prop=n_compras/sum(n_compras)) %>%
+  select(`floor_date(fecha_compra, "month")`, prop) %>%
+  filter(nombre_comercial %in% c("NALFER S.A.",
+                                 "SANQUILCO SOCIEDAD ANONIMA",
+                                 "MERCOLUZ S A",
+                                 "TERCIR S R L",
+                                 "MENASOL  SOCIEDAD ANONIMA",
+                                 
+                                 "RIBOIRA PINTOS MARIANA",
+                                 "SCALABRINI DE MAINE JORGE DANIEL",
+                                 "VARELA HNOS. SOCIEDAD ANONIMA",
+                                 "ISAFER LTDA")) %>%
+  ggplot(aes(x=`floor_date(fecha_compra, "month")`, y=prop,
+             fill=nombre_comercial)) +
+  geom_bar(stat="identity", position="fill") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(x="Mes", y="Proporción de adjudicaciones", fill="Nombre del oferente") +
+  ggthemes::theme_economist() +
+  theme(legend.position="right")
+#Agregar comentario sobre BPS
+```
 
 
 [^1]: [web-scrapping](https://es.wikipedia.org/wiki/Web_scraping) es una técnica utilizada mediante programas de software para extraer información de sitios web. 
