@@ -292,7 +292,7 @@ compras %>%
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
         legend.position = "bottom",
-        plot.title = element_text(face = "bold" , family=  "sans-serif", size = 10,hjust = 0.5)
+        plot.title = element_text(face = "bold" , family=  "sans-serif", size = 10,hjust = 0.5),
         strip.text = element_blank())
 ```
 
