@@ -211,19 +211,24 @@ Decidimos evalaur los 10 primeros entes que tiene la mayor cantidad gastada en e
 
 
 ```{r,  fig.align='center',fig.cap= figure_cap("three_plot" ,'Grafico de barras donde compara el top 10 de entes en gato  adjudicado en base a la moneda de compra ')}
-ggplotly(ggplot(compras %>% 
+ggplotly(
+  ggplot(compras %>% 
     filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-01", monto_adj > 0) %>%
-    filter(inciso %in% (compras_inciso %>% arrange(desc(total_comprado)) %>% head(10) %>% pull(inciso))) %>%
+    filter(inciso %in% (compras_inciso %>% arrange(desc(total_comprado)) %>% head(10) %>% 
+                          pull(inciso))) %>%
+    mutate(pesos_uruguayo=str_to_title(str_replace_all(pesos_uruguayo, "_"," "))) %>%
     group_by(inciso, pesos_uruguayo) %>% summarise(total_comprado = signif(sum(monto_adj_pesos)/ 1000000 , digit=3), cantidad_comprado = n(),
 monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
-  arrange(desc(total_comprado)), aes(fill=pesos_uruguayo, y=total_comprado, x=inciso)) + 
+  arrange(desc(total_comprado)), aes(fill=pesos_uruguayo, y=total_comprado, x=fct_reorder(inciso, total_comprado))) + 
     geom_bar( stat="identity", position="fill") +
   coord_flip() +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
     legend.position = "bottom",                           
   text=element_text(family="serif", size = 10, hjust = 1)
-  )) %>% config(displayModeBar = F) %>%
+  ) +
+  labs(y="Inciso", x=NULL) +
+  scale_fill_discrete(labels=c("Otra moneda", "Pesos uruguayos"))) %>% config(displayModeBar = F) %>%
   layout(title = "Top 10 de entes en gasto adjudicado en base a a la moneda de compra", width=850, legend = list(orientation = 'h', x = 0, y = -0.2, bgcolor = "#E2E2E2", font = list(family = "sans-serif",
     size = 10)))
 ```
@@ -386,7 +391,7 @@ inner_join(oferentes, compras, by="id_compra") %>%
              fill=nombre_comercial)) +
   geom_bar(stat="identity", position="fill") +
   scale_y_continuous(labels = scales::percent_format()) +
-  labs(x="Mes", y="Proporción de adjudicaciones", fill="Nombre del oferente") +
+  labs(x="Mes", y="Proporción de ofertas realizadas", fill="Nombre del oferente") +
   ggthemes::theme_economist() +
   theme(legend.position="right")
 #Agregar comentario sobre BPS
