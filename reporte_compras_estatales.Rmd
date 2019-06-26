@@ -57,12 +57,7 @@ f.ref <- function(label){
 }
 ```
 
-```{r}
-library(lattice) #just to illustrate another histogram function
-library(kfigr)
-options("kfigr.prefix" = TRUE)
-options("kfigr.link" = TRUE)
-```
+
 
 
 ```{r}
@@ -219,8 +214,7 @@ Decidimos evalaur los 10 primeros entes que tiene la mayor cantidad gastada en e
 ggplotly(ggplot(compras %>% 
     filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-01", monto_adj > 0) %>%
     filter(inciso %in% (compras_inciso %>% arrange(desc(total_comprado)) %>% head(10) %>% pull(inciso))) %>%
-    mutate(trimestre = ifelse(fecha_compra < "2018-04-01", "2018_01", ifelse( fecha_compra <"2018-07-01", "2018_02", ifelse(fecha_compra <"2018-10-01", "2018_03", ifelse( fecha_compra <"2019-01-01", "2018_04", "2019_01")))), 
-           pesos_uruguayo = ifelse(id_moneda == 0 , "pesos_uruguayo", "otra_moneda")) %>% group_by(inciso, pesos_uruguayo) %>% summarise(total_comprado = signif(sum(monto_adj_pesos)/ 1000000 , digit=3), cantidad_comprado = n(),
+    group_by(inciso, pesos_uruguayo) %>% summarise(total_comprado = signif(sum(monto_adj_pesos)/ 1000000 , digit=3), cantidad_comprado = n(),
 monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
   arrange(desc(total_comprado)), aes(fill=pesos_uruguayo, y=total_comprado, x=inciso)) + 
     geom_bar( stat="identity", position="fill") +
@@ -236,43 +230,51 @@ monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
 
 
 Como se ve en `r f.ref("three_plot")` justamentente los entes que tiene mayor gasto son los que en su mayoria de compras son realizadas en moneda extranjera( mas que nada en dolares).  
-Nos queda la duda de si estas compras son de montos variables y a su vez expecioficas o solamente en general compran asi.  
 
 
+En base a los visto en los graficos  `r f.ref("one_plot")`  y `r f.ref("two_plot")` quisimos ver si habia alguna correlacion entre las variables **total_comprado** y **cantidad_copmprado** . Por eso evaluaresmo en un grafico en conjunto estas variables y graficaremso una regresion.
+Un dato importante es que omitiremos del grafico las anomalias de cantidad dado que dispersa el grafico y no le da mucha calidad a la info. 
 
-```{r, fig.align='center', fig.cap="Monto total adjudicado por semana en función de la cantidad de adjudicaciones realizadas."}
-compras %>% 
-  filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
-  group_by(floor_date(fecha_compra, "week"), monto_adj_pesos) %>% 
-  tally() %>% 
-  summarise(cant_adjs = sum(n), 
-            total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>% 
-  filter(cant_adjs >= quantile(cant_adjs)[2] / 1.5) %>%
-  ggplot() + 
-  geom_line(aes(x = cant_adjs, y = total_comprado)) +
-  labs(x = "Cantidad de adjudicaciones mensuales\n", 
-       y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
-  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
-  ggthemes::theme_economist() +
-  theme(axis.title = element_text(face = "bold"))
+
+```{r}
+
 ```
 
 
+```{r, fig.align='center', fig.cap= figure_cap("four_plot","Monto total adjudicado por semana en función de la cantidad de adjudicaciones realizadas con un grafilo de regresion local.")}
+
+ggplotly(ggplot(compras_week %>% 
+  filter(cantidad_comprado >= quantile(cantidad_comprado,probs = 0.25) - 1.5 * IQR(cantidad_comprado)),aes(x = cantidad_comprado, y = total_comprado)) +
+  geom_point(color='green') +
+  geom_smooth(method = 'loess') + 
+  labs(x = "Cantidad de adjudicaciones semanales\n", 
+       y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
+  ggthemes::theme_economist() +
+  theme(axis.title = element_text(face = "bold")))  %>% config(displayModeBar = F) %>%
+  layout(title = "Monto total por semana en funcion a la cantidad de adjudicaciones", width=850)
+```
+
+Se puede observar por el grafico que no hay ninguna correlacion , indicando que no necesariamente existen  semanas con muchas compras y  sea el mayor  gasto de  dinero
 
 
-```{r fig.align='center', fig.cap="Asociación entre el tiempo que requiró concluir la compra (span) y el monto involucrado en la compra según moneda de la compra. No parecería existir una relación entre las mismas."}
-compras %>% 
-  mutate(span = (fecha_compra %--% fecha_pub_adj) %/% hours(1),
-         pesos = if_else(id_moneda == 0, "Compra en pesos", "Compra en otra moneda")) %>% 
-  ggplot() +
-  geom_point(aes(log(span), log(monto_adj_pesos), color = pesos), alpha = 1/5) +
-  facet_wrap(~pesos) +
+Por ultimo estudiamos si habia algo significativo entre el periodo de tiempo que lleva la licetacion finalizar y el monto que conlleva la misma.  
+Tuvmimos un inconveniente dado que los datos estaban muy sesgados y realizamos una trasnsformacion a las variables para un mejor grafico .La transformacion usada fue la [transformacion logaritmica][4]
+
+
+
+```{r fig.align='center', fig.cap=figure_cap("fift_plot", "Asociación entre el tiempo que requiró concluir la compra (span) y el monto involucrado en la compra según moneda de la compra. No parecería existir una relación entre las mismas.") }
+ggplot(compras, aes(x= log(span) , y= log(monto_adj_pesos), color=pesos_uruguayo)) +
+  geom_point(alpha = 1/5)+
+  facet_wrap(~pesos_uruguayo) +
   labs(x = "\nSpan de la compra (en logs - en días)", 
        y = "Monto de la compra\n(en logs - en pesos corrientes)\n", 
-       color = NULL) +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  ggthemes::theme_economist() +
+       color = NULL,
+       title ="Compraracion entre el tiempo que requitio finlizar la compra \n  y el monto de la misma en base a la moneda usada" ) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))+
+    ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold" , family=  "sans-serif", size = 10,hjust = 0.5),
         legend.position = "bottom")
 ```
 
@@ -285,10 +287,12 @@ compras %>%
   ggplot() +
   geom_histogram(aes(x = log(span), y = ..density.., fill = apel)) +
   facet_wrap(~apel) +
-  labs(x = "Span de la compra (en logs - en días)", y = "Proporción\n", fill = "Apertura\nElectrónica") +
+  labs(x = "Span de la compra (en logs - en días)", y = "Proporción\n", fill = "Apertura\nElectrónica",
+       title = "Histograma de tiempo que requirio finalizar la compra segun su apertura electronica") +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
         legend.position = "bottom",
+        plot.title = element_text(face = "bold" , family=  "sans-serif", size = 10,hjust = 0.5)
         strip.text = element_blank())
 ```
 
@@ -368,3 +372,5 @@ oferentes %>%
 [2]: https://github.com/ddapueto/workGroup_Stat/blob/master/compras_estatales.R "Github code"
 
 [3]: https://www.agesic.gub.uy/innovaportal/file/6176/1/resolucion_005_2016.pdf "Decreto datos abiertos"
+
+[4]: https://drive.google.com/file/d/1tXUX1HHsh2gxckzvYO-2jzX5G3Xf-xk4/view?usp=sharing "Transformacion motivo de uso"
