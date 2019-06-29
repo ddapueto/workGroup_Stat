@@ -457,7 +457,10 @@ compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = 
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
           tasa = zoo::na.locf(tasa),
           monto_adj_pesos = monto_adj * tasa) %>% 
-   filter(monto_adj > 0, fecha_compra > "2018-01-01")
+   filter(monto_adj > 0, fecha_compra > "2018-01-01") %>%
+  mutate(trimestre = ifelse(fecha_compra < "2018-04-01", "2018_01", ifelse( fecha_compra <"2018-07-01", "2018_02", ifelse(fecha_compra <"2018-10-01", "2018_03", ifelse( fecha_compra <"2019-01-01", "2018_04", "2019_01")))), 
+         pesos_uruguayo = ifelse(id_moneda == 0 , "pesos_uruguayo", "otra_moneda"),
+         span = (fecha_compra %--% fecha_pub_adj) %/% hours(1))
 write_rds(compras, path = "Data/rds/compras.rds")
 
 compras %>% 
