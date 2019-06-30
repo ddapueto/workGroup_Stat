@@ -461,20 +461,8 @@ compras <- readr::read_csv("Data/Csv/comprasEstatalesrefactor.csv", col_types = 
   mutate(trimestre = ifelse(fecha_compra < "2018-04-01", "2018_01", ifelse( fecha_compra <"2018-07-01", "2018_02", ifelse(fecha_compra <"2018-10-01", "2018_03", ifelse( fecha_compra <"2019-01-01", "2018_04", "2019_01")))), 
          pesos_uruguayo = ifelse(id_moneda == 0 , "pesos_uruguayo", "otra_moneda"),
          span = (fecha_compra %--% fecha_pub_adj) %/% hours(1))
-write_rds(compras, path = "Data/rds/compras.rds")
 
-compras %>% 
-   select(fecha_compra, id_moneda, tasa) %>% 
-   distinct(fecha_compra, id_moneda, tasa) %>% 
-   mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda, labels = monedas$desc_moneda)) %>% 
-   ggplot() +
-   geom_line(aes(fecha_compra, tasa, color = id_moneda), show.legend = FALSE) +
-   facet_wrap(~id_moneda, scales = "free_y") +
-   labs(x = NULL, y = "Tipo de cambio") +
-   ggthemes::theme_economist() +
-   theme(axis.title = element_text(face = "bold"),
-         strip.text = element_text(face = "bold"),
-         strip.background = element_rect(fill = "white", linetype = "solid"))
+
 
 # Variable classes
 # tibble(variables = names(sapply(compras, class))
@@ -486,16 +474,33 @@ compras %>%
 # adjudicaciones -> detalle de la compra (de la factura)
 adjudicaciones <- readr::read_csv("Data/Csv/comprasEstatalesAdjudicacionesrefactor.csv") %>% 
    left_join(select(monedas, id_moneda, desc_moneda), by = "id_moneda") %>% 
-   left_join(select(compras, fecha_compra, id_compra), by = "id_compra") %>% 
+   inner_join(select(compras, fecha_compra, id_compra, id_inciso,inciso), by = "id_compra") %>% 
    mutate(id_moneda = factor(id_moneda, levels = monedas$id_moneda)) %>% 
    left_join(select(tipo_de_cambio, -moneda), by = c("id_moneda", "fecha_compra" = "fecha")) %>% 
    mutate(tasa = if_else(id_moneda == 0, 1, tasa),
-          monto_adj_pesos = precio_tot_imp * tasa)
+         tasa = zoo::na.locf(tasa),
+         monto_adj_pesos = precio_tot_imp * tasa,
+         monto_adj_pesos_unit = precio_unit * tasa)
 write_rds(adjudicaciones, path = "Data/rds/adjudicaciones.rds")
 
 # oferentes -> todos los que participaron 
 oferentes <- readr::read_csv("Data/Csv/comprasEstatalesOferentesrefactor.csv")
+oferentes <- rbind.data.frame(adjudicaciones %>% 
+                                group_by(id_compra, nombre_comercial) %>% 
+                                select(id_compra, nombre_comercial, monto_adj_pesos, nro_doc_prov) %>% 
+                                left_join(oferentes, by="id_compra") %>% 
+                                filter(is.na(nombre_comercial.y)) %>% 
+                                select(id_compra, nombre_comercial.x, nro_doc_prov.x) %>% 
+                                mutate(key_id = 1, tipo_doc_prov="R") %>% 
+                                rename(nombre_comercial=nombre_comercial.x, nro_doc_prov=nro_doc_prov.x),oferentes)
 write_rds(oferentes, path = "Data/rds/oferentes.rds")
+
+# join compras con cantidad de articulo adjudicados y cantidad de oferentes si hay
+
+compras <- compras %>% 
+  left_join(adjudicaciones %>% group_by(id_compra) %>% summarise(arti_max = max(key_id)) , by="id_compra") %>%
+  left_join(oferentes %>% group_by(id_compra) %>% summarise(oferentes_max = max(key_id)) , by="id_compra")
+write_rds(compras, path = "Data/rds/compras.rds")
 
 #################################
 ##### FIN DE LA PROGRAMACIÓN ####
