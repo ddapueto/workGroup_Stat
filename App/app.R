@@ -128,8 +128,26 @@ server <- function(input, output, session) {
   )
   
   
+  da <- reactive({
+    if ((input$filtro_inciso) != "No filtrar") {
+      base_compras %>% filter(inciso == input$filtro_inciso)
+    }else{base_compras}
+  })
+  
+  da_moneda <- reactive({
+    if(input$filtro_moneda != "No filtrar"){
+      da() %>% filter(moneda == input$filtro_moneda)
+    }else{base_compras}
+  })
+  
+  da_tipo <- reactive({
+    if(input$filtro_tipo_compra != "No filtrar"){
+      da_moneda() %>% filter(tipo_compra ==(input$filtro_tipo_compra))
+    }else{base_compras}
+  })
+  
   output$monto_adj <- renderPlot({
-    datos %>% 
+    da_tipo() %>% 
       filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
       group_by(floor_date(fecha_compra, "week")) %>% 
       summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>% 
@@ -142,7 +160,7 @@ server <- function(input, output, session) {
   })
   
   output$cant_adj <- renderPlot({
-    datos %>% 
+    da_tipo() %>% 
       filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
       group_by(floor_date(fecha_compra, "week")) %>% 
       tally() %>% 
