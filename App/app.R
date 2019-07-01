@@ -1,8 +1,11 @@
-
 library(shiny)
 library(shinythemes)
 library(here)
 library(tidyverse)
+library(lubridate)
+library(rlang)
+library(lubridate)
+
 
 # generate data
 path <- here::here()
@@ -117,39 +120,23 @@ server <- function(input, output, session) {
       kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "responsive"), fixed_thead = TRUE, full_width = FALSE)
   }
 
-  datos <- base_compras
-  reactive(if (input$filtro_inciso != "No filtrar") {datos <- datos %>% filter(inciso == !!sym(input$filtro_inciso))}
-  )
-  reactive(if (input$filtro_moneda != "No filtrar") {datos <- datos %>% filter(inciso == !!sym(input$filtro_moneda))}
-  )
-  reactive(if (input$filtro_tipo_compra != "No filtrar") {datos <- datos %>% filter(inciso == !!sym(input$filtro_tipo_compra))}
-  )
+datos <- base_compras
 
   
   output$monto_adj <- renderPlot({
     datos %>% 
-      filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%
-      group_by(floor_date(fecha_compra, "week")) %>% 
-      summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE)) %>% 
-      ggplot() +
-      geom_line(aes(`floor_date(fecha_compra, "week")`, total_comprado), color = "purple") +
-      labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
-      scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
-      ggthemes::theme_economist() +
-      theme(axis.title = element_text(face = "bold"))
+      if (!!sym(input$filtro_inciso) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_inciso))} %>% 
+        if (!!sym(input$filtro_moneda) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_moneda))} %>% 
+          if (!!sym(input$filtro_tipo_compra) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_tipo_compra))}
+
   })
   
   output$cant_adj <- renderPlot({
     datos %>% 
-      filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
-      group_by(floor_date(fecha_compra, "week")) %>% 
-      tally() %>% 
-      ggplot() +
-      geom_line(aes(`floor_date(fecha_compra, "week")`, n), color = "orange") +
-      labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
-      scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
-      ggthemes::theme_economist() +
-      theme(axis.title = element_text(face = "bold"))
+      if (!!sym(input$filtro_inciso) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_inciso))} %>% 
+      if (!!sym(input$filtro_moneda) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_moneda))} %>% 
+      if (!!sym(input$filtro_tipo_compra) != "No filtrar") {datos %>% filter(inciso == !!sym(input$filtro_tipo_compra))}
+      
   })
 
 }
