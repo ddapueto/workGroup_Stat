@@ -140,17 +140,20 @@ breaks_histogram <- function(x){
 
 # Introduccion {.tabset .tabset-fade .tabset-pills}
 
-
- Se realiza un investigacion sobre las adjudicaciones realizadas por el Estado y todos sus entes vinculados. Pudiendo observar todos los tipos de compras como tambien que productos son los que se compraron y quienes son los principales vendedores.  
+ En este proyecto se realiza un investigacion sobre las adjudicaciones realizadas por el Estado, así como todos sus entes vinculados. Podemos observar todos los tipos de compras realiazdas, como tambien qué productos son los que se compraron y por qué proveedores fueron hechas las compras, entre mucha más información disponible.
  
+ Este trabajo, y los datos de los que disponemos, nacen de la estrategia de Datos Abiertos, que impulsa que toda la ciudadanía disponga de conjuntos de datos sobre los organismos públicos, para el aprovechamiento y utilización de los mismos, así como aumentar la transparencia. 
  
+ Nuestra investigación se divide principalmente en analizar las compras hechas por el estado, así como los oferentes de las mismas. Buscamos investigar cómo varían a lo largo del tiempo, la cantidad de dinero gastada por el Estado y el número de adjudicaciones realizadas, no solo a nivel global (es decir, analizando los datos para todos los entes del estado) sino centrándonos también en aquellos entes que tienen una mayor incidencia en los ámbitos en los que nosotros nos desenvolvemos, como son la Intendencia de Montevideo y la Udelar. También buscamos ver cuáles son los principales oferentes, y ver si la participación de los mismos en las adjudicaciones es constante a lo largo del tiempo.
  
- Esta investigacion se origina realizando una [web-scrapping][1][^1] donde se extrajo los datos y luego se realiza una limpieza de todo lo extraible [script][2], teniendo 3 base de datos ( compras,  adjudicaciones y oferentes)  
+# Descripción de los datos
  
+ Esta investigacion se origina realizando una [web-scrapping][1][^1], la cual es una técnica utilizada para extraer datos de sitios web. Luego realizamos una limpieza de todo lo extraído ([script][2]), teniendo 3 bases de datos: compras,  adjudicaciones y oferentes.
  
-
-
-
+ De todo el acondicionamiento que se hizo sobre los datos, es de destacar el hecho de que no todas las compras fueron hechas con la misma moneda, sino que en la base hay 20 tipos de monedas distintas. Así, la variable monto adjudicado de la base de compras, que es de tipo numérico, dispone valores que no son comparables entre sí al estar en dinstintas monedas, por lo cual no tendría sentido realizar sobre ellos operaciones como la suma. Para resolver este problema, fue necesario conseguir las tasas de cambio para cada una de estas monedas para cada fecha en el intervalo de tiempo estudiado, y realizar la conversión de la variable a una moneda común (pesos uruguayos).
+ 
+ Estas bases de datos son relacionales, por lo cual podemos hacer uso de ellas en forma conjunta y de esa forma combinar la información disponible en las distintas bases para analizarla de la forma que nos interese hacerlo (por ejemplo, hacer uso de la información de los oferentes disponible en la base homóloga, en conjunto con la información sobre la fecha de las compras, que se encuentra en la base de compras).
+ 
 # Analisis Exploratorio
 
 ## Compras
