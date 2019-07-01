@@ -65,7 +65,6 @@ f.ref <- function(label){
 compras <- readr::read_rds("Data/rds/compras.rds")
 adjudicaciones <- readr::read_rds("Data/rds/adjudicaciones.rds")
 oferentes <- readr::read_rds("Data/rds/oferentes.rds")
-
 #funciones o variables comunes en estudio
 # datasets agrupado en week con variables comunes
 compras_week <- compras %>% 
@@ -94,8 +93,6 @@ compras_week <- compras %>%
            ) %>%
   
   rename(semana = `floor_date(fecha_compra, "week")`)
-
-
 #total compras
 cto_compras <- compras %>% 
                   filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>% count(id_compra) %>% 
@@ -103,7 +100,6 @@ cto_compras <- compras %>%
                   .[1]
 #total gastado en pesos uruguayos
 monto_total <- sum(compras$monto_adj_pesos)
-
 #compras inciso
 compras_inciso <- compras %>% 
    filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>%
@@ -112,17 +108,12 @@ compras_inciso <- compras %>%
    summarise(total_comprado = signif(sum(monto_adj_pesos)/ 1000000 , digit=5),
              cantidad_comprado = n(),
             monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3)))
-
-
 #adjudicaciones por cantidad de articulo por compra
-
 adjudicaciones_arti_inciso <- adjudicaciones %>% 
   group_by(desc_articulo,inciso) %>% 
   summarise(counta = n(), total_comprado = sum(monto_adj_pesos), promedio_costo_unit = mean(monto_adj_pesos_unit)) %>% 
   arrange(desc(counta))
-
 #join adjudicaciones con oferentes
-
 ofe_adj <- oferentes %>% group_by(nombre_comercial) %>% 
   summarise(cto_compras_ofe = n_distinct(id_compra)) %>%
   left_join(
@@ -130,7 +121,6 @@ ofe_adj <- oferentes %>% group_by(nombre_comercial) %>%
       group_by(nombre_comercial) %>% 
       summarise(cto_compras = n_distinct(id_compra), tot_compra = sum(monto_adj_pesos)) ,by="nombre_comercial") %>%
   replace_na(list(cto_compras = 0, tot_compra = 0 , nombre_comercial = "Desconocido"))
-
 # funcion para calcular breaks in histogram , method Freedman-Diaconis
 breaks_histogram <- function(x){
   
@@ -158,84 +148,101 @@ breaks_histogram <- function(x){
 
 ## Compras
 
-Como datos generales podemos observar que hubo dentro del periodo de investigacion unas `r cto_compras` compras adjudicadas que alcancaza `r monto_total / 1000000` millones de pesos uruguayos . Hay que tener en cuenta como se dijo antes , que estos son datos aproximados dado que no todos los entes publicos han ingresado su gastos, como por ejemplo la intendencia de Rocha donde no encontramos ninguna adjudicacion.  
+Como datos generales, podemos observar que hubo dentro del período de investigación unas `r cto_compras` compras adjudicadas que alcanzan un total de `r monto_total / 1000000` millones de pesos uruguayos . Hay que tener en cuenta que, como se dijo antes, estos son datos aproximados, dado que no todos los entes publicos han ingresado su gastos. Un ejemplo de esto es la Intendencia de Rocha, para la cual no encontramos ninguna adjudicacion.  
+
+Está claro que el proceso que se está transitando con respecto al [decreto][3] es costoso dado los cambios de metodología de trabajo de los entes publicos, y por lo tanto debido a esto no se está obteniendo toda la informacion adecuada.  
+
+Para todas las visualizaciones que realizamos, el período de tiempo que evaluamos es desde Enero 2018 hasta Abril 2019.
+
+Uno de los primeros gráficos que creemos es muy importante visualizar es un gráfico lineal que nos brinda una serie de tiempo en base al monto gastado mensualmente, en pesos uruguayos.  
 
 
-Esta claro que el proceso que se esta transitando con respecto al [decreto][3] es costoso dado los cambios de metodologia de trabajo de los entes publicos y por lo tanto no se esta obteniendo toda la informacion adecuada.  
-
-
-Uno de los primero graaficos que creemos es muy importante de visualizar es un grafico lineal que nos brinda una serie de tiempo en base al monto gastado en pesos uruguayos.  
-
-
-
-```{r,fig.align='center', fig.cap=figure_cap("one_plot", "Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes) en grafico lineal")}
+```{r,fig.align='center', fig.cap=figure_cap("one_plot", "Evolución del monto total adjudicado semanalmente\n(en millones de pesos corrientes) en gráfico lineal, con anomalías. \\label{fig:plot}"), fig.ref}
 ggplotly(ggplot(compras_week) +
-  geom_line(aes(semana, total_comprado), colour = "purple") +
+  geom_line(aes(week_date, total_comprado), colour = "purple") +
   labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
   scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold") )+
-  geom_point(data = compras_week %>% dplyr::filter(is_outlier_monto == TRUE), aes(semana, total_comprado, colour = 'Anomaly'), size = 5, alpha = 0.5)+
-  geom_point(data = compras_week %>% dplyr::filter(is_low_monto == 1), aes(semana, total_comprado, colour = 'Percentil_5'), size = 2) +
-  geom_point(data = compras_week %>% dplyr::filter(is_high_monto == 1), aes(semana, total_comprado, colour = 'Percentile_95'), size = 2) + 
+  geom_point(data = compras_week %>% dplyr::filter(is_outlier_monto == TRUE), aes(week_date, total_comprado, colour = 'Anomaly'), size = 5, alpha = 0.5)+
+  geom_point(data = compras_week %>% dplyr::filter(is_low_monto == 1), aes(week_date, total_comprado, colour = 'Percentil_5'), size = 2) +
+  geom_point(data = compras_week %>% dplyr::filter(is_high_monto == 1), aes(week_date, total_comprado, colour = 'Percentile_95'), size = 2) + 
     scale_colour_manual(values=c( Percentil_5="blue", Percentile_95="red", Anomaly ="darkred" ))) %>%
   config(displayModeBar = F) %>% 
   layout(title="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)", width=850, legend = list(orientation = 'h', x = 0, y = -0.1, bgcolor = "#E2E2E2", font = list(family = "sans-serif",
     size = 10))) 
 ```
-&nbsp;
 
-Como se puede verm vemos algunos picos u anomalias (marcados con puntos rojos grandes) que nos denotan que en ese periodo fue el mayor gasto del pais en compras.  
-Muy importante avisar que se evalua en un periodo de tiempo semanal desde Enero 2018 hasta Abril 2019.  
-La semana donde hay mas gasto adjudicado es en `r format(zoo::as.Date(unlist(compras_week %>% arrange(desc(total_comprado)) %>% head(1) %>% select(semana))), "%d/%m/%Y")`.  
+Como se puede ver, existen algunos picos u anomalías (marcados con puntos rojos grandes) que nos denotan que en ese período se dio el mayor gasto del país en compras.  
+La semana donde hay mas gasto adjudicado es en `r format(zoo::as.Date(unlist(compras_week %>% arrange(desc(total_comprado)) %>% head(1) %>% select(week_date))), "%d/%m/%Y")`.  
+Como se puede ver en la figura `r f.ref("one_plot")`
 
-&nbsp;
+A continuación, realizamos otro gráfico lineal para poder ver la cantidad de adjudicaciones realizadas en cada semana. 
 
-```{r, fig.align='center', fig.cap=figure_cap("two_plot","Evolución de la cantidad de adjudicaciones mensuales segun grafico lineal con anomalias")}
+```{r, fig.align='center', fig.cap=figure_cap("two_plot","Evolución de la cantidad de adjudicaciones semanales según gráfico lineal, con anomalías.")}
 ggplotly(ggplot(compras_week) +
-  geom_line(aes(semana, cantidad_comprado), color = "orange") +
+  geom_line(aes(week_date, cantidad_comprado), color = "orange") +
   labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
   scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold")) +
-  geom_point(data = compras_week %>% dplyr::filter(is_outlier_cto == TRUE), aes(semana, cantidad_comprado, colour = 'Anomaly'), size = 5, alpha = 0.5)+
-  geom_point(data = compras_week %>% dplyr::filter(is_low_cto == 1), aes(semana, cantidad_comprado, colour = 'Percentil_5'), size = 2) +
-  geom_point(data = compras_week %>% dplyr::filter(is_high_cto == 1), aes(semana, cantidad_comprado, colour = 'Percentile_95'), size = 2) +
+  geom_point(data = compras_week %>% dplyr::filter(is_outlier_cto == TRUE), aes(week_date, cantidad_comprado, colour = 'Anomaly'), size = 5, alpha = 0.5)+
+  geom_point(data = compras_week %>% dplyr::filter(is_low_cto == 1), aes(week_date, cantidad_comprado, colour = 'Percentil_5'), size = 2) +
+  geom_point(data = compras_week %>% dplyr::filter(is_high_cto == 1), aes(week_date, cantidad_comprado, colour = 'Percentile_95'), size = 2) +
   scale_colour_manual(
     values=c( Percentil_5="blue", Percentile_95="red", Anomaly ="darkred" ))) %>%
   config(displayModeBar = F) %>%
   layout(title = "Evolución de la cantidad de adjudicaciones por semana", width=850, legend = list(orientation = 'h', x = 0, y = -0.1, bgcolor = "#E2E2E2", font = list(family = "sans-serif",
     size = 10))) 
 ```
-&nbsp;
-Como se ve hay varios puntos bajos, eso quier decir que no hay una costante de compras , hay semanas que son muy bajas la compras realizadas.  
 
-&nbsp;
+Como podemos observar, existen varios puntos bajos, lo cual significa que el número de compras realizadas no es constante a lo largo del tiempo, sino que hay semanas en las cuáles es muy baja la cantidad de compras realizadas.
 
-En este caso quisimos hacer una tabla mas dinamica donde podamos ver cuales son los inciso o entes que gastan mas  y a su vez cuales son los que realizan mas cantidad de compras.  
+En base a los visto en los gráficos `r f.ref("one_plot")`  y `r f.ref("two_plot")`, quisimos ver si existe alguna correlación entre las variables **total_comprado** y **cantidad_comprado**. Para responder esta pregunta realizamos un gráfico de dispersión de estas variables en conjunto, y graficamos una regresión.
 
-&nbsp;
-```{r , fig.align='center',fig.cap=table_cap("one_table" ,'Tabla comparativa de inciso sobre total de pesos uruguayos gastado ( en millones de pesos) y cantidad de compras') }
+Un dato importante es que omitiremos del grafico las anomalías de cantidad dado que dispersa el grafico y no le da mucha calidad a la info.
+
+
+```{r, fig.align='center', fig.cap= figure_cap("four_plot","Monto total adjudicado semanalmente en función de la cantidad de adjudicaciones realizadas con un grafilo de regresion local.")}
+
+ggplotly(ggplot(compras_week %>% 
+  filter(cantidad_comprado >= quantile(cantidad_comprado,probs = 0.25) - 1.5 * IQR(cantidad_comprado)),aes(x = cantidad_comprado, y = total_comprado)) +
+  geom_point(color='green') +
+  geom_smooth(method = 'loess') + 
+  labs(x = "Cantidad de adjudicaciones semanales\n", 
+       y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
+  ggthemes::theme_economist() +
+  theme(axis.title = element_text(face = "bold")))  %>% config(displayModeBar = F) %>%
+  layout(title = "Monto total por semana en funcion a la cantidad de adjudicaciones", width=850)
+```
+
+Se puede observar por el gráfico que no hay ninguna correlación, indicando que no necesariamente semanas con gran cantidad de compras significan un mayor gasto de dinero.
+
+Luego, con el objetivo de ver y tener disponible toda la información de las compras de forma más dinámica, hicimos la siguiente tabla donde podamos ver cuáles son los incisos o entes estatales que gastan más, y a su vez cuáles son los que realizan más cantidad de compras.
+
+```{r , fig.align='center',fig.cap=table_cap("one_table" ,'Tabla comparativa de inciso sobre total de pesos uruguayos gastado (en millones de pesos) y cantidad de compras') }
 
 high_anomaly <- quantile(compras_inciso$monto_promedio,probs = 0.75) + 1.5 * IQR(compras_inciso$monto_promedio)
-datatable(compras_inciso %>% arrange(desc(total_comprado)) , rownames = FALSE) %>%
+datatable(compras_inciso %>% arrange(desc(total_comprado)) , rownames = FALSE, colnames=c("Inciso", "Monto adjudicado total", "Cantidad de compras", "Monto adjudicado promedio")) %>%
   formatStyle('monto_promedio',
           backgroundColor = styleInterval(high_anomaly , c('white', 'yellow')))
 
 ```
 
-&nbsp;
   
-Se ve claramente que al ordenar por **total_comprado** el ente que gasto mas en el periodo es `r compras_inciso %>% arrange(desc(total_comprado)) %>% head(1) %>% select(inciso)`.  
-A su vez el ente que tiene mas compras realizadas es `r compras_inciso %>% arrange(desc(cantidad_comprado)) %>% head(1) %>% select(inciso)`.  
-Tambien agergamos una marca en la tabla en la columna **monto_promedio** la que indica que esta muy por arriba de lo normal cuando estra pintado de amarillo ,  quiere decir el gasto promedio del ente es muy superior a los demas.  
+Se ve claramente que al ordenar por **Monto adjudicado total** el ente que gasto más en un solo período período es `r compras_inciso %>% arrange(desc(total_comprado)) %>% head(1) %>% select(inciso)`.  
+A su vez, el ente que tiene mayor cantidad de compras realizadas es `r compras_inciso %>% arrange(desc(cantidad_comprado)) %>% head(1) %>% select(inciso)`.  
+
+También agregamos una marca en la tabla en la columna **Monto adjudicado promedio**, la cuál cuando está pintada de amarillo indica que el valor está muy por encima de lo normal, es decir que el gasto promedio del ente es muy superior al de los demás.  
 
 &nbsp;
+&nbsp;
+&nbsp;
 
-Decidimos evalaur los 10 primeros entes que tiene la mayor cantidad gastada en el periodo en pesos uruguayos ajustados
+A continuación, decidimos evaluar para los 10 primeros entes que tienen la mayor cantidad gastada en el período en pesos uruguayos ajustados, el porcentaje de compras realizadas en pesos uruguayos o en otra moneda. Las barras de la visualización están ordenadas en forma descendiente de acuerdo al monto adjudicado total.
 
-
-```{r,  fig.align='center',fig.cap= figure_cap("three_plot" ,'Grafico de barras donde compara el top 10 de entes en gato  adjudicado en base a la moneda de compra')}
+```{r,  fig.align='center',fig.cap= figure_cap("three_plot" ,'Grafico de barras donde compara el top 10 de entes en gato  adjudicado en base a la moneda de compra ')}
 ggplotly(
   ggplot(compras %>% 
     filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-01", monto_adj > 0) %>%
@@ -250,7 +257,7 @@ monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
     legend.position = "bottom",                           
-  axis.text.y =element_text(family="serif", size = 10, hjust = 1)
+  text=element_text(family="serif", size = 10, hjust = 1)
   ) +
   labs(y="Inciso", x=NULL) +
   scale_fill_discrete(labels=c("Otra moneda", "Pesos uruguayos"))) %>% config(displayModeBar = F) %>%
@@ -259,48 +266,21 @@ monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
 ```
 
 
-Como se ve en `r f.ref("three_plot")` justamentente los entes que tiene mayor gasto son los que en su mayoria de compras son realizadas en moneda extranjera( mas que nada en dolares).  
+Como se ve en `r f.ref("four_plot")`, justamentente los entes que tienen mayor gasto adjudicado son los que en su mayoría realizan sus compras en monedas extranjeras (principalmente en dólares).  
 
-&nbsp;
-
-En base a los visto en los graficos  `r f.ref("one_plot")`  y `r f.ref("two_plot")` quisimos ver si habia alguna correlacion entre las variables **total_comprado** y **cantidad_comprado** . Por eso evaluaremos en un grafico este conjunto de variables y graficaremos una regresion.
-Un dato importante es que omitiremos del grafico las anomalias de cantidad dado que dispersa el grafico y no le da mucha calidad a la info. 
-
-&nbsp;
-
-
-```{r cars-fig, fig.align='center', fig.cap= figure_cap("four_plot","Monto total adjudicado por semana en función de la cantidad de adjudicaciones realizadas con un grafilo de regresion local.")}
-
-ggplotly(ggplot(compras_week %>% 
-  filter(cantidad_comprado >= quantile(cantidad_comprado,probs = 0.25) - 1.5 * IQR(cantidad_comprado)),aes(x = cantidad_comprado, y = total_comprado)) +
-  geom_point(color='green') +
-  geom_smooth(method = 'loess') + 
-  labs(x = "Cantidad de adjudicaciones semanales\n", 
-       y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
-  scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
-  ggthemes::theme_economist() +
-  theme(axis.title = element_text(face = "bold")))  %>% config(displayModeBar = F) %>%
-  layout(title = "Monto total por semana en funcion a la cantidad de adjudicaciones", width=850)
-```
-
-&nbsp;
-
-Se puede observar por el grafico que no hay ninguna correlacion , indicando que no necesariamente existen  semanas con muchas compras y  sea el mayor  gasto de  dinero
-
-&nbsp;
-Por ultimo estudiamos si habia algo significativo entre el periodo de tiempo que lleva la licitacion finalizar y el monto que conlleva la misma.  
-Tuvmimos un inconveniente dado que los datos estaban muy sesgados y realizamos una trasnsformacion a las variables para un mejor grafico .La transformacion usada fue la [transformacion logaritmica][4]
+A continuación, estudiamos si existe una relación entre el periodo de tiempo que le toma finalizar a la licitación, y el monto que conlleva la misma.
+Tuvmimos un inconveniente dado que los datos estaban muy sesgados y realizamos una transformación a las variables para un mejor gráfico. La transformación usada fue la [transformacion logaritmica][4]
 
 
 
-```{r fig.align='center', fig.cap=figure_cap("fift_plot", "Asociación entre el tiempo que requiró concluir la compra (span) y el monto involucrado en la compra según moneda de la compra.") }
+```{r fig.align='center', fig.cap=figure_cap("fift_plot", "Asociación entre el tiempo que requiró concluir la compra (span) y el monto involucrado en la compra según moneda de la compra. No parecería existir una relación entre las mismas.") }
 ggplot(compras, aes(x= log(span) , y= log(monto_adj_pesos), color=pesos_uruguayo)) +
   geom_point(alpha = 1/5)+
   facet_wrap(~pesos_uruguayo) +
   labs(x = "\nSpan de la compra (en logs - en días)", 
        y = "Monto de la compra\n(en logs - en pesos corrientes)\n", 
        color = NULL,
-       title ="Compraracion entre el tiempo que requitio finlizar la compra \n  y el monto de la misma en base a la moneda usada" ) +
+       title ="Compraración entre el tiempo que requirió finlizar la compra \n  y el monto de la misma en base a la moneda usada" ) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))+
     ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
@@ -308,14 +288,12 @@ ggplot(compras, aes(x= log(span) , y= log(monto_adj_pesos), color=pesos_uruguayo
         legend.position = "bottom")
 ```
 
-```{r fig.align='center', fig.cap=figure_cap("six_plot","Distribución del logaritmo del tiempo que requiró concluir la compra (span) según si la misma tuvo o no apertura electrónica.")}
+```{r fig.align='center', fig.cap="Distribución del logaritmo del tiempo que requiró concluir la compra (span) según si la misma tuvo o no apertura electrónica."}
 compras %>% 
   filter(!is.na(apel)) %>% 
   mutate(span = (fecha_compra %--% fecha_pub_adj) %/% hours(1),
-         log_span = log(span),
          pesos = if_else(id_moneda == 0, "Compra en pesos", "Compra en otra moneda"),
-         apel = if_else(apel == "Yes", "Sí", "No")) %>%
-  filter(!is.na(log_span)) %>%
+         apel = if_else(apel == "Yes", "Sí", "No")) %>% 
   ggplot() +
   geom_histogram(aes(x = log(span), y = ..density.., fill = apel), bins = 20) +
   facet_wrap(~apel) +
@@ -330,6 +308,7 @@ compras %>%
 &nbsp;
 En base a estos graficos ( `r f.ref("fifth_plot")`  y `r f.ref("six_plot")`) vemos que no hay una relacion fuerte entre el periodo de compras con su monto. Igual asi decidimos omitir la teoria dado  que en verdad hay muchas Compras directas dentro de este conjunto de datos.  
 Por lo tanto decidimos filtrar los datos y solo tomar las compras que sean licitaciones y ver ademas cuantas oferentes hay en cada adjudicaciones y la relacion con el monto a cobrar.
+
 
 
 ```{r}
@@ -360,7 +339,6 @@ ggplotly(ggplot(
   ) %>% config(displayModeBar = F) %>%
   layout(title = "Evolucion del monto total adjudicado por semana para la IMM", width=850)
   
-
 ```
 &nbsp;
 Se puede observar que el monto total adjudicado semanalmente por la Intendencia de Montevideo se mantiene generalmente en una franja de entre 0 y 300 millones de pesos uruguayos. Existe únicamente un pico, sobre el final del año 2018, cuando se adjudicaron unos 500 millones de pesos.
@@ -399,7 +377,6 @@ Por lo tanto realizamos una tabla dinamica agrupada por articulo, donde contabil
 &nbsp;
 
 ```{r, fig.align='center',fig.cap=table_cap("two_table" ,'Tabla ')}
-
 datatable(adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(veces_comprado = sum(counta) , total_gastado = round(sum(total_comprado)), gastado_unit_mediana = round(median(promedio_costo_unit)), max_gastado = round(max(promedio_costo_unit))) %>% arrange(desc(total_gastado)) , colnames = c('Articulo', 'Veces adquirido', 'Total gastado(millones pesos)', 'Mediana gasto unitario', 'Precio maximo unidad'))
 ```
 
@@ -448,13 +425,22 @@ cant_compras <- compras %>%
   .[1]
 ```
 
-La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cto_compras` compras. El proveedor más frecuente durante 2018 fue Nalfer SA, quien participó en el 4,10% de las compras.
+La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cant_compras` compras. El proveedor más frecuente durante 2018 fue Nalfer SA, quien participó en el 4,10% de las compras.
 
 ```{r}
 # Principales oferentes del estado
-
-datatable(ofe_adj %>% mutate(porc_gandado = round(cto_compras/cto_compras_ofe, digits = 3)) %>% arrange(desc(cto_compras_ofe)) , rownames = FALSE)
-
+oferentes %>% 
+  group_by(nro_doc_prov, nombre_comercial) %>% 
+  summarise(n_compras = n_distinct(id_compra)) %>% 
+  ungroup() %>%
+  mutate(prop = percent(n_compras / sum(n_compras), digits = 2)) %>%
+  arrange(desc(n_compras, nombre_comercial)) %>%
+  select(nombre_comercial, nro_doc_prov, n_compras, prop) %>% 
+  head(10) %>%
+  kable(format = "html", format.args = list(big.mark = ".", decimal.mark = ","), escape = FALSE,
+        caption = "Principales oferentes del Estado en 2018 y 2019",
+        col.names = c("Proveedor", "ID", "Cantidad", "Proporción")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
 
 A continuación, nos interesa ver si aquellos proveedores que son predominantes a la hora de adjudicarse compras a lo largo del año, también lo son mensualmente de forma sostenida.
@@ -465,8 +451,16 @@ inner_join(oferentes, compras, by="id_compra") %>%
   summarise(n_compras = n_distinct(id_compra)) %>%
   mutate(prop=n_compras/sum(n_compras)) %>%
   select(`floor_date(fecha_compra, "month")`, prop) %>%
-  filter(nombre_comercial %in% (ofe_adj %>% arrange(desc(cto_compras_ofe)) %>% head(10) %>% 
-                          pull(nombre_comercial))) %>%
+  filter(nombre_comercial %in% c("NALFER S.A.",
+                                 "SANQUILCO SOCIEDAD ANONIMA",
+                                 "MERCOLUZ S A",
+                                 "TERCIR S R L",
+                                 "MENASOL  SOCIEDAD ANONIMA",
+                                 
+                                 "RIBOIRA PINTOS MARIANA",
+                                 "SCALABRINI DE MAINE JORGE DANIEL",
+                                 "VARELA HNOS. SOCIEDAD ANONIMA",
+                                 "ISAFER LTDA")) %>%
   ggplot(aes(x=`floor_date(fecha_compra, "month")`, y=prop,
              fill=nombre_comercial)) +
   geom_bar(stat="identity", position="fill") +
