@@ -4,6 +4,7 @@ library(shinythemes)
 library(here)
 library(tidyverse)
 library(lubridate)
+library(DT)
 
 
 # generate data
@@ -81,12 +82,12 @@ ui <- tagList(
                ), h4("Filtros a aplicar a las visualizaciones:"),
                selectInput("filtro_inciso", "Inciso:", incisoList, selected = "Administración de Servicios de Salud del Estado"),
                selectInput("filtro_moneda", "Moneda:", monedaList, selected = "pesos_uruguayo")
-               ),
+             ),
              mainPanel(
-               h3("Serie de tiempo de monto adjudicado por semana."), align="center",
+               h3(textOutput("title_graph") , align="center"),
                plotOutput("monto_adj"),
-               h3("Serie de tiempo de cantidad de adjudicaciones por semana.", align="center"),
-               plotOutput("cant_adj")
+               h3("Tabla de Datos de la visualizacion."),
+               DT::dataTableOutput("mytable")
              )
     )
   )
@@ -124,51 +125,51 @@ server <- function(input, output, session) {
   
   dam <- reactive({
     if ((input$filtro_moneda) != "No filtrar") {
-      da() %>% filter(pesos_uruguayo == input$filtro_moneda)
-    }else{base_compras}
+      da() %>% filter(pesos_uruguayo == input$filtro_moneda) %>% filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>%
+        group_by(floor_date(fecha_compra, "week")) %>% 
+        summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE), cantidad_comprado = n()) %>%
+        rename(semana = `floor_date(fecha_compra, "week")`)
+    }else{base_compras %>% filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>%
+        group_by(floor_date(fecha_compra, "week")) %>% 
+        summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE), cantidad_comprado = n()) %>%
+        rename(semana = `floor_date(fecha_compra, "week")`)}
+  })
+  
+  output$title_graph <- renderText({
+    if (input$visualizacion == 'monto_adjj'){
+      paste("Serie de tiempo de monto adjudicado por semana para ", input$filtro_inciso , "en ", input$filtro_moneda)
+    }
+    else{
+      paste("Serie de tiempo de cantidad de adjudicaciones por semana ", input$filtro_inciso , "en ", input$filtro_moneda)
+    }
+    
   })
   
   output$monto_adj <- renderPlot({
     
-    
     #genracion dataframe
-    df <- dam() %>% 
-      filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-30", monto_adj > 0) %>%
-      group_by(floor_date(fecha_compra, "week")) %>% 
-      summarise(total_comprado = sum(monto_adj_pesos, na.rm = TRUE), cantidad_comprado = n()) %>%
-      rename(semana = `floor_date(fecha_compra, "week")`)
     
     if (input$visualizacion == 'monto_adjj'){
-      ggplot(df) +
+      ggplot(dam()) +
         geom_line(aes(semana, total_comprado), color = "purple") +
         labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
         scale_y_continuous(labels = scales::dollar_format(prefix = "$U", big.mark = ".", decimal.mark = ",", scale = 1/1e6)) +
         ggthemes::theme_economist() +
         theme(axis.title = element_text(face = "bold"))
     } else{
-      ggplot(df) +
+      ggplot(dam()) +
         geom_line(aes(semana, cantidad_comprado), color = "orange") +
         labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
         scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
         ggthemes::theme_economist() +
         theme(axis.title = element_text(face = "bold"))
-      }
+    }
     
   })
   
-  output$cant_adj <- renderPlot({
-    da() %>% 
-      filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-30", monto_adj > 0) %>%
-      group_by(floor_date(fecha_compra, "week")) %>% 
-      tally() %>% 
-      ggplot() +
-      geom_line(aes(`floor_date(fecha_compra, "week")`, n), color = "orange") +
-      labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
-      scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
-      ggthemes::theme_economist() +
-      theme(axis.title = element_text(face = "bold"))
+  output$mytable = DT::renderDataTable({
+    dam()
   })
-  
 }
 
 
