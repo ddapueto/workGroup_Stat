@@ -60,8 +60,8 @@ def getinfoweb(tuple_days):
 
 if __name__ == "__main__":
 
-    start_date = date(2018, 1, 1)
-    end_date = date(2019, 6, 1)
+    start_date = date(2018, 2, 15)
+    end_date = date(2018, 2, 16)
 
     listadayswork = dayslist(start_date, end_date)
 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
                                                 i = i+1
                                         else:
                                             json_oferante['key_id'] = i
-                                            for key5o, value5o in value4oItem.items():
+                                            for key5o, value5o in value4o.items():
                                                 json_oferante[key5o] = value5o
                                             ofera = ofera.append(json_oferante, ignore_index=True)
                                 else:
