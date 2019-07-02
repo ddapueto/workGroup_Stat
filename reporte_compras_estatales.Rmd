@@ -492,7 +492,7 @@ La excepción a esto entre los proveedores que estamos visualizando es *SCALABRI
 
 Como herramienta complementaria a este proyecto, realizamos una aplicación online interactiva utilizando la herramienta shiny.
 ```{r}
-#agregar link de la shiny acá, en la palabra shiny
+
 ```
 
 La aplicación fue diseñada de forma que fácilmente sea posible para el usuario acceder a dos partes fundamentales del proyecto: los datos en sí mismos, y el análisis exploratorio. Para esto, dividimos el entorno del usuario en dos secciones principales: Metadata y Análisis Exploratorio.
