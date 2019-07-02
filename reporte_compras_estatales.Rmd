@@ -158,17 +158,17 @@ breaks_histogram <- function(x){
 
 ## Compras
 
-Como datos generales podemos observar que hubo dentro del periodo de investigacion unas `r cto_compras` compras adjudicadas que alcancaza `r monto_total / 1000000` millones de pesos uruguayos . Hay que tener en cuenta como se dijo antes , que estos son datos aproximados dado que no todos los entes publicos han ingresado su gastos, como por ejemplo la intendencia de Rocha donde no encontramos ninguna adjudicacion.  
+Como datos generales, podemos observar que hubo dentro del período de investigación unas `r cto_compras` compras adjudicadas que alcanzan un total de `r monto_total / 1000000` millones de pesos uruguayos . Hay que tener en cuenta que, como se dijo antes, estos son datos aproximados, dado que no todos los entes publicos han ingresado su gastos. Un ejemplo de esto es la Intendencia de Rocha, para la cual no encontramos ninguna adjudicación.  
 
+Está claro que el proceso que se está transitando con respecto al [decreto][3] es costoso dado los cambios de metodología de trabajo de los entes publicos, y por lo tanto debido a esto no se está obteniendo toda la informacion adecuada.  
 
-Esta claro que el proceso que se esta transitando con respecto al [decreto][3] es costoso dado los cambios de metodologia de trabajo de los entes publicos y por lo tanto no se esta obteniendo toda la informacion adecuada.  
+Para todas las visualizaciones que realizamos, el período de tiempo que evaluamos es desde Enero de 2018 hasta Abril de 2019.
 
+Uno de los primeros gráficos que creemos es muy importante visualizar es un gráfico lineal que nos brinda una serie de tiempo en base al monto gastado semanalmente, en pesos uruguayos.
 
-Uno de los primero graaficos que creemos es muy importante de visualizar es un grafico lineal que nos brinda una serie de tiempo en base al monto gastado en pesos uruguayos.  
+&nbsp;
 
-
-
-```{r,fig.align='center', fig.cap=figure_cap("one_plot", "Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes) en grafico lineal")}
+```{r,fig.align='center', fig.cap=figure_cap("one_plot", "Evolución del monto total adjudicado por semana\n(en millones de pesos corrientes) en grafico lineal")}
 ggplotly(ggplot(compras_week) +
   geom_line(aes(semana, total_comprado), colour = "purple") +
   labs(x = NULL, y = "Monto total adjudicado por semana\n(equivalente en millones de pesos corrientes)\n") +
@@ -180,21 +180,22 @@ ggplotly(ggplot(compras_week) +
   geom_point(data = compras_week %>% dplyr::filter(is_high_monto == 1), aes(semana, total_comprado, colour = 'Percentile_95'), size = 2) + 
     scale_colour_manual(values=c( Percentil_5="blue", Percentile_95="red", Anomaly ="darkred" ))) %>%
   config(displayModeBar = F) %>% 
-  layout(title="Evolución del monto total adjudicado por mes\n(en millones de pesos corrientes)", width=850, legend = list(orientation = 'h', x = 0, y = -0.1, bgcolor = "#E2E2E2", font = list(family = "sans-serif",
+  layout(title="Evolución del monto total adjudicado por semana\n(en millones de pesos corrientes)", width=850, legend = list(orientation = 'h', x = 0, y = -0.1, bgcolor = "#E2E2E2", font = list(family = "sans-serif",
     size = 10))) 
 ```
 &nbsp;
 
-Como se puede verm vemos algunos picos u anomalias (marcados con puntos rojos grandes) que nos denotan que en ese periodo fue el mayor gasto del pais en compras.  
-Muy importante avisar que se evalua en un periodo de tiempo semanal desde Enero 2018 hasta Abril 2019.  
-La semana donde hay mas gasto adjudicado es en `r format(zoo::as.Date(unlist(compras_week %>% arrange(desc(total_comprado)) %>% head(1) %>% select(semana))), "%d/%m/%Y")`.  
+Como se puede ver, existen algunos picos u anomalías (marcados con puntos rojos grandes) que nos denotan que en ese período se dio el mayor gasto del país en compras.  
+La semana donde hay mas gasto adjudicado es en `r format(zoo::as.Date(unlist(compras_week %>% arrange(desc(total_comprado)) %>% head(1) %>% select(semana))), "%d/%m/%Y")`, como se puede ver en la figura `r f.ref("one_plot")`.
+
+A continuación, realizamos otro gráfico lineal para poder ver la cantidad de adjudicaciones realizadas en cada semana. 
 
 &nbsp;
 
-```{r, fig.align='center', fig.cap=figure_cap("two_plot","Evolución de la cantidad de adjudicaciones mensuales segun grafico lineal con anomalias")}
+```{r, fig.align='center', fig.cap=figure_cap("two_plot","Evolución de la cantidad de adjudicaciones semanales segun grafico lineal con anomalias")}
 ggplotly(ggplot(compras_week) +
   geom_line(aes(semana, cantidad_comprado), color = "orange") +
-  labs(x = NULL, y = "Cantidad de adjudicaciones mensuales\n") +
+  labs(x = NULL, y = "Cantidad de adjudicaciones semanales\n") +
   scale_y_continuous(labels = scales::number_format(big.mark = ".", decimal.mark = ",")) +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold")) +
@@ -208,17 +209,17 @@ ggplotly(ggplot(compras_week) +
     size = 10))) 
 ```
 &nbsp;
-Como se ve hay varios puntos bajos, eso quier decir que no hay una costante de compras , hay semanas que son muy bajas la compras realizadas.  
+Como podemos observar, existen varios puntos bajos, lo cual significa que el número de compras realizadas no es constante a lo largo del tiempo, sino que hay semanas en las cuáles es muy baja la cantidad de compras realizadas.
 
 &nbsp;
 
-En este caso quisimos hacer una tabla mas dinamica donde podamos ver cuales son los inciso o entes que gastan mas  y a su vez cuales son los que realizan mas cantidad de compras.  
+Luego, con el objetivo de ver y tener disponible toda la información de las compras de forma más dinámica, hicimos la siguiente tabla donde podamos ver cuáles son los incisos o entes estatales que gastan más, y a su vez cuáles son los que realizan más cantidad de compras.
 
 &nbsp;
 ```{r , fig.align='center',fig.cap=table_cap("one_table" ,'Tabla comparativa de inciso sobre total de pesos uruguayos gastado ( en millones de pesos) y cantidad de compras') }
 
 high_anomaly <- quantile(compras_inciso$monto_promedio,probs = 0.75) + 1.5 * IQR(compras_inciso$monto_promedio)
-datatable(compras_inciso %>% arrange(desc(total_comprado)) , rownames = FALSE) %>%
+datatable(compras_inciso %>% arrange(desc(total_comprado)) , rownames = FALSE, colnames=c("Inciso", "Monto adjudicado total", "Cantidad de compras", "Monto adjudicado promedio")) %>%
   formatStyle('monto_promedio',
           backgroundColor = styleInterval(high_anomaly , c('white', 'yellow')))
 
@@ -226,16 +227,16 @@ datatable(compras_inciso %>% arrange(desc(total_comprado)) , rownames = FALSE) %
 
 &nbsp;
   
-Se ve claramente que al ordenar por **total_comprado** el ente que gasto mas en el periodo es `r compras_inciso %>% arrange(desc(total_comprado)) %>% head(1) %>% select(inciso)`.  
-A su vez el ente que tiene mas compras realizadas es `r compras_inciso %>% arrange(desc(cantidad_comprado)) %>% head(1) %>% select(inciso)`.  
-Tambien agergamos una marca en la tabla en la columna **monto_promedio** la que indica que esta muy por arriba de lo normal cuando estra pintado de amarillo ,  quiere decir el gasto promedio del ente es muy superior a los demas.  
+Se ve claramente que al ordenar por **Monto adjudicado total** el ente que gasto más en un solo período período es `r compras_inciso %>% arrange(desc(total_comprado)) %>% head(1) %>% select(inciso)`.  
+A su vez, el ente que tiene mayor cantidad de compras realizadas es `r compras_inciso %>% arrange(desc(cantidad_comprado)) %>% head(1) %>% select(inciso)`.  
+
+También agregamos una marca en la tabla en la columna **Monto adjudicado promedio**, la cuál cuando está pintada de amarillo indica que el valor está muy por encima de lo normal, es decir que el gasto promedio del ente es muy superior al de los demás.
 
 &nbsp;
 
-Decidimos evalaur los 10 primeros entes que tiene la mayor cantidad gastada en el periodo en pesos uruguayos ajustados
+A continuación, decidimos evaluar para los 10 entes que tienen la mayor cantidad gastada en el período en pesos uruguayos ajustados, el porcentaje de compras realizadas en pesos uruguayos o en otra moneda. Las barras de la visualización están ordenadas en forma descendente de acuerdo al monto adjudicado total.
 
-
-```{r,  fig.align='center',fig.cap= figure_cap("three_plot" ,'Grafico de barras donde compara el top 10 de entes en gato  adjudicado en base a la moneda de compra')}
+```{r,  fig.align='center',fig.cap= figure_cap("three_plot" ,'Gráfico de barras donde se compara el top 10 de entes en gasto  adjudicado en base a la moneda de compra')}
 ggplotly(
   ggplot(compras %>% 
     filter("2018-01-01" < fecha_compra, fecha_compra < "2019-04-01", monto_adj > 0) %>%
@@ -259,12 +260,13 @@ monto_promedio = (signif(total_comprado/cantidad_comprado ,digit = 3))) %>%
 ```
 
 
-Como se ve en `r f.ref("three_plot")` justamentente los entes que tiene mayor gasto son los que en su mayoria de compras son realizadas en moneda extranjera( mas que nada en dolares).  
+Como se ve en `r f.ref("three_plot")`, justamentente los entes que tienen mayor gasto adjudicado son los que en su mayoría realizan sus compras en monedas extranjeras (principalmente en dólares). 
 
 &nbsp;
 
-En base a los visto en los graficos  `r f.ref("one_plot")`  y `r f.ref("two_plot")` quisimos ver si habia alguna correlacion entre las variables **total_comprado** y **cantidad_comprado** . Por eso evaluaremos en un grafico este conjunto de variables y graficaremos una regresion.
-Un dato importante es que omitiremos del grafico las anomalias de cantidad dado que dispersa el grafico y no le da mucha calidad a la info. 
+En base a los visto en los gráficos `r f.ref("one_plot")`  y `r f.ref("two_plot")`, quisimos ver si existe alguna correlación entre las variables **total_comprado** y **cantidad_comprado**. Para responder esta pregunta realizamos un gráfico de dispersión de estas variables en conjunto, y graficamos una regresión.
+
+Un dato importante es que omitiremos del gráfico las anomalías de cantidad, dado que dispersa el gráfico y no le da mucha calidad a la info.
 
 &nbsp;
 
@@ -285,11 +287,11 @@ ggplotly(ggplot(compras_week %>%
 
 &nbsp;
 
-Se puede observar por el grafico que no hay ninguna correlacion , indicando que no necesariamente existen  semanas con muchas compras y  sea el mayor  gasto de  dinero
+Se puede observar por el gráfico que no hay ninguna correlación, indicando que no necesariamente semanas con gran cantidad de compras significan un mayor gasto de dinero.
 
 &nbsp;
-Por ultimo estudiamos si habia algo significativo entre el periodo de tiempo que lleva la licitacion finalizar y el monto que conlleva la misma.  
-Tuvmimos un inconveniente dado que los datos estaban muy sesgados y realizamos una trasnsformacion a las variables para un mejor grafico .La transformacion usada fue la [transformacion logaritmica][4]
+A continuación, estudiamos si existe una relación entre el periodo de tiempo que le toma finalizar a la licitación, y el monto que conlleva la misma.
+Tuvmimos un inconveniente dado que los datos estaban muy sesgados y realizamos una transformación a las variables para un mejor gráfico. La transformación usada fue la [transformacion logaritmica][4].
 
 
 
@@ -320,7 +322,7 @@ compras %>%
   geom_histogram(aes(x = log(span), y = ..density.., fill = apel), bins = 20) +
   facet_wrap(~apel) +
   labs(x = "Span de la compra (en logs - en días)", y = "Proporción\n", fill = "Apertura\nElectrónica",
-       title = "Histograma de tiempo que requirio finalizar la compra segun su apertura electronica") +
+       title = "Histograma de tiempo que requirió finalizar la compra segun su apertura electronica") +
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"),
         legend.position = "bottom",
@@ -328,8 +330,8 @@ compras %>%
         strip.text = element_blank())
 ```
 &nbsp;
-En base a estos graficos ( `r f.ref("fifth_plot")`  y `r f.ref("six_plot")`) vemos que no hay una relacion fuerte entre el periodo de compras con su monto. Igual asi decidimos omitir la teoria dado  que en verdad hay muchas Compras directas dentro de este conjunto de datos.  
-Por lo tanto decidimos filtrar los datos y solo tomar las compras que sean licitaciones y ver ademas cuantas oferentes hay en cada adjudicaciones y la relacion con el monto a cobrar.
+En base a estos graficos ( `r f.ref("fifth_plot")`  y `r f.ref("six_plot")`), vemos que no hay una relación fuerte entre el período de compras y su monto. Igual así decidimos omitir la teoría dado que en verdad hay muchas compras directas dentro de este conjunto de datos.  
+Por lo tanto decidimos filtrar los datos y solo tomar las compras que sean licitaciones, y ver además cuántos oferentes hay en cada adjudicación y la relación con el monto a cobrar.
 
 
 ```{r}
@@ -337,7 +339,7 @@ Por lo tanto decidimos filtrar los datos y solo tomar las compras que sean licit
 ```
 
 &nbsp;
-Finalizando esta parte del estudio , quisimo ponernos exquisitos y ver como se comporto dos entes en las cuales estamos directamente involucrados. Estos seria la Intendiencia de Montevideo y Udelar.
+Finalizando esta parte del estudio, quisimos ponernos exquisitos y ver cómo se comportaron dos de los entes con los cuales estamos directamente involucrados. Estos serían la Intendiencia de Montevideo y Udelar.
 
 
 
@@ -358,7 +360,7 @@ ggplotly(ggplot(
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
   ) %>% config(displayModeBar = F) %>%
-  layout(title = "Evolucion del monto total adjudicado por semana para la IMM", width=850)
+  layout(title = "Evolución del monto total adjudicado por semana para la IMM", width=850)
   
 
 ```
@@ -385,20 +387,21 @@ ggplotly(ggplot(
   ggthemes::theme_economist() +
   theme(axis.title = element_text(face = "bold"))
   ) %>% config(displayModeBar = F) %>%
-  layout(title = "Evolucion del monto total adjudicado por semana para la UDELAR", width=850)
+  layout(title = "Evolución del monto total adjudicado por semana para la UDELAR", width=850)
 ```
-
-
+&nbsp;
+Los gastos de la Udelar muestran un comportamiento similar a los de la Intendencia de Montevideo, aunque el gasto tiende a oscilar más pronunciadamente a lo largo del tiempo, mostrando una mayor cantidad de picos, tanto de valores altos como bajos.
+&nbsp;
 
 ## Adjudicaciones
 
-En este conjunto se determina exactamente por compra que articulo de compra se realizo con su monto unitario y tambien quien fue el oferente que gano la licitacion o a quien fue realizada la compra directa
+En este conjunto se determina exactamente, por compra, qué articulo de compra se realizó con su monto unitario.
 &nbsp;
 
-Por lo tanto realizamos una tabla dinamica agrupada por articulo, donde contabilizamos en cuantas compras diferentes aprace este articulo comprado y cuanto es el monto total gatado en millones de pesos. En esos calculos tambien agregamos la mediana del precio unitario de cada articulo y el precio maximo que se compro el articulo
+Por lo tanto realizamos una tabla dinámica agrupada por articulo, donde contabilizamos en cuántas compras diferentes aparace este artículo comprado y cuánto es el monto total gastado en millones de pesos. En esos cálculos también agregamos la mediana del precio unitario de cada artículo y el precio máximo por el que se compró el artículo.
 &nbsp;
 
-```{r, fig.align='center',fig.cap=table_cap("two_table" ,'Tabla ')}
+```{r, fig.align='center',fig.cap=table_cap("two_table" ,'Tabla agrupada por artículo sobre la cantidad de veces que fue adquirido, y su costo.')}
 
 datatable(adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(veces_comprado = sum(counta) , total_gastado = round(sum(total_comprado)), gastado_unit_mediana = round(median(promedio_costo_unit)), max_gastado = round(max(promedio_costo_unit))) %>% arrange(desc(total_gastado)) , colnames = c('Articulo', 'Veces adquirido', 'Total gastado(millones pesos)', 'Mediana gasto unitario', 'Precio maximo unidad'))
 ```
@@ -407,15 +410,15 @@ datatable(adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(v
 
 
 &nbsp;
-Como se ve , el articulo que se gasto mas dinero en la adjuducacion del gobierno fue con el `r adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(total_gastado = round(sum(total_comprado)/1000000 , digits = 3)) %>% arrange(desc(total_gastado)) %>% head(1) %>% select(desc_articulo)`
+Como se puede ver, el artículo en el que se gasto más dinero en la adjuducación del gobierno fue con el `r adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(total_gastado = round(sum(total_comprado)/1000000 , digits = 3)) %>% arrange(desc(total_gastado)) %>% head(1) %>% select(desc_articulo)`.
 
 &nbsp;
-Este articulo es fuertemente relacionado a las graficas iniciales donde vemos un pico grande de compras en el mes Marzo.
+Este artículo tiene un gran peso en las gráficas iniciales, en las cuales vemos un pico grande de gastos en el mes Marzo.
 &nbsp;
 
-Tambien se realizo una grafica con los 10 articulos mas veces comprados 
+A su vez, tambien realizamos una gráfica con los 10 artículos más veces comprados.
 &nbsp;
-```{r , fig.align='center', fig.cap=figure_cap("nine_plot", "Top 10 de articulos en base a cantidad de veces adquiridos")}
+```{r , fig.align='center', fig.cap=figure_cap("nine_plot", "Top 10 de artículos en base a cantidad de veces adquiridos")}
 ggplotly(ggplot(adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(veces_comprado = sum(counta) , total_gastado = round(sum(total_comprado)/1000000 , digits = 3), gastado_unit_mediana = round(median(promedio_costo_unit)), max_gastado = round(max(promedio_costo_unit))) %>% arrange(desc(veces_comprado)) %>% head(10)%>% mutate(desc_articulo = replace(desc_articulo, desc_articulo=="PASAJE EN TRANSPORTE AEREO DE PASAJEROS FUERA DEL PAIS, CONTRATADO EN URUGUAY", "PASAJE AEREO")) ,
     aes( y=veces_comprado, x=fct_reorder(desc_articulo, veces_comprado) , fill=veces_comprado, text=paste(desc_articulo,": ",veces_comprado))) + 
     geom_bar( stat="identity") +
@@ -430,10 +433,10 @@ ggplotly(ggplot(adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summa
 ```
 
 &nbsp;
-Como veran el articulo que mas veces es comprado por diferente entes y donde hay muchos mas facturas es en `r adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(veces = sum(counta)) %>% arrange(desc(veces)) %>% head(1) %>% select(desc_articulo)`
+Vemos que el artículo que más veces es comprado por diferente entes, y donde hay una gran cantidad de facturas es en `r adjudicaciones_arti_inciso %>% group_by(desc_articulo) %>% summarise(veces = sum(counta)) %>% arrange(desc(veces)) %>% head(1) %>% select(desc_articulo)`.
 &nbsp;
 
-## oferentes 
+## Oferentes 
 
 ```{r}
 # Cantidad de oferentes
@@ -448,18 +451,18 @@ cant_compras <- compras %>%
   .[1]
 ```
 
-La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuales han partidicado de un total de `r cto_compras` compras. El proveedor más frecuente durante 2018 fue Nalfer SA, quien participó en el 4,10% de las compras.
+La base cuenta con información sobre `r cant_provs_oferentes` proveedores, los cuáles han partidicado de un total de `r cto_compras` compras. El proveedor más frecuente durante 2018 fue Nalfer SA, quien participó en el 4,10% de las compras.
 
 ```{r}
 # Principales oferentes del estado
 
-datatable(ofe_adj %>% mutate(porc_gandado = round(cto_compras/cto_compras_ofe, digits = 3)) %>% arrange(desc(cto_compras_ofe)) , rownames = FALSE)
+datatable(ofe_adj %>% mutate(porc_gandado = round(cto_compras/cto_compras_ofe, digits = 3)) %>% arrange(desc(cto_compras_ofe)) , rownames = FALSE, colnames=c("Nombre comercial", "Cantidad de ofertas realizadas", "Cantidad de compras", "Monto total comprado", "Porcentaje de licitaciones ganadas"))
 
 ```
 
-A continuación, nos interesa ver si aquellos proveedores que son predominantes a la hora de adjudicarse compras a lo largo del año, también lo son mensualmente de forma sostenida.
+A continuación, nos interesa ver si aquellos proveedores que son predominantes a la hora de ofertar en las compras a lo largo del año, también lo son mensualmente de forma sostenida. Para esto, utilizamos los datos del año 2018, puesto que nos interesa observar lo que sucede a lo largo del año y hacer una comparación mensual, y el 2018 es el único año para el cual tenemos una cantidad suficiente de datos como para trabajar, además de disponer de todos los meses (algo que no sucede con los datos del corriente año, de los cuales solo disponemos hasta abril).
 
-```{r}
+```{r, fig.cap="Evolución a lo largo del tiempo de los porcentajes de adjudicaciones de los principales oferentes, para el año 2018."}
 inner_join(oferentes, compras, by="id_compra") %>%
   filter("2018-01-01" < fecha_compra, fecha_compra < "2018-12-31", monto_adj > 0) %>%   group_by(nombre_comercial, floor_date(fecha_compra, "month")) %>%
   summarise(n_compras = n_distinct(id_compra)) %>%
@@ -473,9 +476,53 @@ inner_join(oferentes, compras, by="id_compra") %>%
   scale_y_continuous(labels = scales::percent_format()) +
   labs(x="Mes", y="Proporción de ofertas realizadas", fill="Nombre del oferente") +
   ggthemes::theme_economist() +
-  theme(legend.position="right")
+  theme(legend.position="right") +
+  theme(axis.text.x =element_text(angle=45))
+
 #Agregar comentario sobre BPS
 ```
+
+Podemos ver que en general los porcentajes se mantienen, y no varían demasiado a lo largo del tiempo, ni tampoco lo hacen mes a mes.
+
+La excepción a esto entre los proveedores que estamos visualizando es *SCALABRINI DE MAINE JORGE DANIEL*, para el cual no se observa en la gráfica actividad durante la mayor parte del año, y aparece por primera vez en octubre, con un porcentaje de ofertas relativamente alto que se mantiene por el resto del año.
+
+&nbsp;
+
+# Aplicación Shiny
+
+Como herramienta complementaria a este proyecto, realizamos una aplicación online interactiva utilizando la herramienta shiny.
+```{r}
+#agregar link de la shiny acá, en la palabra shiny
+```
+
+La aplicación fue diseñada de forma que fácilmente sea posible para el usuario acceder a dos partes fundamentales del proyecto: los datos en sí mismos, y el análisis exploratorio. Para esto, dividimos el entorno del usuario en dos secciones principales: Metadata y Análisis Exploratorio.
+
+En la primera de ellas, se halla para las 3 bases de datos utilizadas una lista de todas sus variables y una breve descripción de las mismas. Además, para aquellas que correspondan, se dispone de sus respectivas codigueras, de forma que se pueda ver fácilmente qué representan en realidad los distintos valores de las variables.
+
+Por otro lado, disponemos de una parte de Análisis Exploratorio, en la cual tanto para la base de compras como para la de adjudicaciones, encontramos visualizaciones y tablas interactivas que reaccionan a los distintos filtros que elija el usuario.
+
+Para la base de compras, el usuario puede elegir si visualizar una serie de tiempo del monto adjudicado por semana, o de la cantidad de compras por semana. Estas visualizaciones ya fueron incluídas al principio de este informe, pero la shiny nos da la posibilidad de que el usuario, utilizando la interactividad, pueda aplicar diferentes filtros sobre ellas, de forma que pueda elegir la información de qué inciso o qué tipo de moneda desea visualizar. Esto es similar a lo que hicimos nosotros al visualizar la serie de tiempo del monto adjudicado solo por la Intendencia de Montevideo o la Udelar, pero la aplicación permite que el usuario pueda filtrar cualquier inciso que desee. Además, disponemos de una tabla que al aplicar los filtros, nos muestra la información de para cada semana la cantidad de compras que se realizaron y el monto total adjudicado.
+
+Disponemos de una visualización y tabla similares también para los datos que se encuentran en la tabla de adjudicaciones, algo que fue menos explorado en este informe, por lo que de esta forma el usuario gana también la posibilidad de hacerlo por sí mismo.
+
+&nbsp;
+
+# Comentarios finales
+Este proyecto nos permitió conocer una gran cantidad de información sobre las compras realizadas por los entes públicos del Estado, así como de aquellos proveedores que toman parte en ellas.
+
+En primer lugar, al hacer un análisis de las compras a lo largo del tiempo, observamos que tanto la cantidad de compras como el monto adjudicado, varían a lo largo del tiempo, oscilando constantemente entre valores altos y bajos, observándose picos de vez en cuando que se deben a compras concretas. Además, pudimos ver que ambas variables no están relacionadas entre sí, como uno podría pensar a priori (es decir, a mayor cantidad de compras no necesariamente el monto adjudicado en ese instante de tiempo es superior).
+
+Pudimos ver cuáles son los entes del Estado que más gastan, destacándose entre otros ANCAP, el Ministerio de Ganadería, Agricultura y Pesca; UTE y OSE. Además, descubrimos que aquellos que más gastan, realizan un gran porcentaje de sus compras en monedas extranjeras, en lugar de en pesos uruguayos.
+
+Finalmente en lo que se refiere a compras, observamos los casos particulares de la Intendencia de Montevideo y la Udelar, como organismos públicos que tienen una gran incidencia en el ámbito en el que nosotros nos desenvolvemos (Montevideo y la Universidad), y no observamos un comportamiento dinstinto al de la totalidad de los entes públicos en su conjunto.
+
+En lo que se refiere a las adjudicaciones propiamente dichas, vimos que por amplia diferencia el mayor gasto por parte del Estado se ha dado en la adquisición de caravanas para bovinos, las cuales son utilizadas para la identificación y el control de dicho ganado. Por otro lado, observamos que el artículo que se adquiere con más frecuencia por los entes estatales son pasajes en ómnibus dentro de país. 
+
+En cuanto a los oferentes, pudimos ver que NAFLER S.A. es el proveedor que mayor cantidad de ofertas ha realizado, con amplia diferencia por sobre los demás, con 4012 ofertas. Vimos además que para los proveedores que muestran una mayor participación, el porcentaje de ofertas realizadas se mantiene constante a lo largo del año para casi todos ellos.
+
+A grandes rasgos, se puede decir que trabajamos con un conjunto de datos de gran extensión que brinda un amplio número de posibilidades. Nosotros trabajamos con algunas de ellas, quedando satisfechos con los resultados logrados, si bien sería posible seguir profundizando en el estudio de estos datos, principalmente en un futuro en el que haya disponible una mayor cantidad de información, y podamos así realizar el estudio sobre intervalos de tiempo más amplios, si es que el Estado continúa en este lineamiento en lo que se refiere la estrategia de Datos Abiertos.
+
+&nbsp;
 
 
 [^1]: [web-scrapping](https://es.wikipedia.org/wiki/Web_scraping) es una técnica utilizada mediante programas de software para extraer información de sitios web. 
