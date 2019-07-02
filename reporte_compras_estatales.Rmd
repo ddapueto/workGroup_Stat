@@ -514,7 +514,11 @@ En primer lugar, al hacer un análisis de las compras a lo largo del tiempo, obs
 
 Pudimos ver cuáles son los entes del Estado que más gastan, destacándose entre otros ANCAP, el Ministerio de Ganadería, Agricultura y Pesca; UTE y OSE. Además, descubrimos que aquellos que más gastan, realizan un gran porcentaje de sus compras en monedas extranjeras, en lugar de en pesos uruguayos.
 
-Finalmente en lo que se refiere a compras, observamos los casos particulares de la Intendencia de Montevideo y la Udelar, como organismos públicos que tienen una gran incidencia en el ámbito en el que nosotros nos desenvolvemos (Montevideo y la Universidad), y no observamos un comportamiento dinstinto al de la totalidad de los entes públicos en su conjunto.
+Finalmente en lo que se refiere a compras, observamos los casos particulares de la Intendencia de Montevideo y la Udelar, como organismos públicos que tienen una gran incidencia en el ámbito en el que nosotros nos desenvolvemos (Montevideo y la Universidad), y no observamos un comportamiento dinstinto al de la totalidad de los entes públicos en su conjunto. Para explorar más casos pariculares, el lector puede hacer uso de la aplicación shiny.
+```{r}
+#agregar link de la shiny acá, en la palabra shiny
+```
+
 
 En lo que se refiere a las adjudicaciones propiamente dichas, vimos que por amplia diferencia el mayor gasto por parte del Estado se ha dado en la adquisición de caravanas para bovinos, las cuales son utilizadas para la identificación y el control de dicho ganado. Por otro lado, observamos que el artículo que se adquiere con más frecuencia por los entes estatales son pasajes en ómnibus dentro de país. 
 
